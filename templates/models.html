@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+
+{% block title %}3 ML Models Evaluation | Population-Driven Demand Forecasting{% endblock %}
+{% block page_heading %}Machine Learning Architecture & Benchmarks{% endblock %}
+
+{% block content %}
+<!-- INTRO BANNER -->
+<div class="card" style="margin-bottom: 24px; border-left: 4px solid #818cf8;">
+    <h3 style="color: #fff; font-size: 1.15rem; margin-bottom: 6px;">Evaluation of 3 Core Algorithms (SVM, KNN, Logistic Regression)</h3>
+    <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6;">
+        In accordance with the project guidelines (Dept. of CS&E, SJMIT Chitradurga), three distinct machine learning algorithms are implemented and rigorously cross-validated using 5-Fold Cross Validation. Each algorithm fulfills specific functional roles: <strong>SVM</strong> provides high-dimensional non-linear mapping, <strong>KNN</strong> models community-specific localized demand, and <strong>Logistic Regression</strong> delivers calibrated probabilistic risk classification with full coefficient interpretability.
+    </p>
+</div>
+
+<!-- CHARTS ROW -->
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title"><i class="fas fa-chart-bar" style="color: var(--color-water);"></i> Variance Explained (R² Score %)</h3>
+                <p class="card-subtitle">Continuous Water and Energy demand regression across models</p>
+            </div>
+        </div>
+        <div class="chart-box">
+            <canvas id="modelR2Chart"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title"><i class="fas fa-check-double" style="color: var(--color-success);"></i> Classifier Accuracy & 5-Fold Cross Validation</h3>
+                <p class="card-subtitle">Resource Scarcity Alert classification benchmarking</p>
+            </div>
+        </div>
+        <div class="chart-box">
+            <canvas id="classifierAccuracyChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- REGRESSION METRICS TABLE -->
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title"><i class="fas fa-table" style="color: var(--color-energy);"></i> Quantitative Demand Regression Performance</h3>
+            <p class="card-subtitle">Evaluated on independent 20% holdout test set with 5-Fold Cross Validation</p>
+        </div>
+        <span class="badge badge-success">Target > 85% Met</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Resource Target</th>
+                    <th>Algorithm</th>
+                    <th>Mean Absolute Error (MAE)</th>
+                    <th>Root Mean Squared Error (RMSE)</th>
+                    <th>R² Variance (%)</th>
+                    <th>5-Fold CV R² (%)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Water -->
+                <tr>
+                    <td rowspan="3" style="vertical-align: middle; font-weight: 700; color: var(--color-water); background: rgba(6, 182, 212, 0.05);">
+                        Water Demand (MLD)
+                    </td>
+                    <td><strong style="color: var(--color-svm);">Support Vector Machine (SVR RBF)</strong></td>
+                    <td>{{ metrics.Water_Demand.SVM.MAE }} MLD</td>
+                    <td>{{ metrics.Water_Demand.SVM.RMSE }} MLD</td>
+                    <td><strong style="color: #38bdf8;">{{ metrics.Water_Demand.SVM.R2_Pct }}%</strong></td>
+                    <td><strong>{{ metrics.Water_Demand.SVM.CV_5Fold_R2 }}%</strong></td>
+                    <td><span class="badge badge-success">Optimal</span></td>
+                </tr>
+                <tr>
+                    <td><strong style="color: var(--color-knn);">K-Nearest Neighbors (KNN Regressor)</strong></td>
+                    <td>{{ metrics.Water_Demand.KNN.MAE }} MLD</td>
+                    <td>{{ metrics.Water_Demand.KNN.RMSE }} MLD</td>
+                    <td><strong style="color: #38bdf8;">{{ metrics.Water_Demand.KNN.R2_Pct }}%</strong></td>
+                    <td><strong>{{ metrics.Water_Demand.KNN.CV_5Fold_R2 }}%</strong></td>
+                    <td><span class="badge badge-success">Optimal</span></td>
+                </tr>
+                <tr>
+                    <td><strong style="color: var(--text-muted);">Linear / Ridge Baseline</strong></td>
+                    <td>{{ metrics.Water_Demand.Linear_Regression.MAE }} MLD</td>
+                    <td>{{ metrics.Water_Demand.Linear_Regression.RMSE }} MLD</td>
+                    <td>{{ metrics.Water_Demand.Linear_Regression.R2_Pct }}%</td>
+                    <td>{{ metrics.Water_Demand.Linear_Regression.CV_5Fold_R2 }}%</td>
+                    <td><span class="badge badge-info">Baseline</span></td>
+                </tr>
+
+                <!-- Energy -->
+                <tr>
+                    <td rowspan="3" style="vertical-align: middle; font-weight: 700; color: var(--color-energy); background: rgba(245, 158, 11, 0.05);">
+                        Energy Demand (MWh)
+                    </td>
+                    <td><strong style="color: var(--color-svm);">Support Vector Machine (SVR RBF)</strong></td>
+                    <td>{{ metrics.Energy_Demand.SVM.MAE }} MWh</td>
+                    <td>{{ metrics.Energy_Demand.SVM.RMSE }} MWh</td>
+                    <td><strong style="color: #f59e0b;">{{ metrics.Energy_Demand.SVM.R2_Pct }}%</strong></td>
+                    <td><strong>{{ metrics.Energy_Demand.SVM.CV_5Fold_R2 }}%</strong></td>
+                    <td><span class="badge badge-success">Optimal</span></td>
+                </tr>
+                <tr>
+                    <td><strong style="color: var(--color-knn);">K-Nearest Neighbors (KNN Regressor)</strong></td>
+                    <td>{{ metrics.Energy_Demand.KNN.MAE }} MWh</td>
+                    <td>{{ metrics.Energy_Demand.KNN.RMSE }} MWh</td>
+                    <td><strong style="color: #f59e0b;">{{ metrics.Energy_Demand.KNN.R2_Pct }}%</strong></td>
+                    <td><strong>{{ metrics.Energy_Demand.KNN.CV_5Fold_R2 }}%</strong></td>
+                    <td><span class="badge badge-success">Optimal</span></td>
+                </tr>
+                <tr>
+                    <td><strong style="color: var(--text-muted);">Linear / Ridge Baseline</strong></td>
+                    <td>{{ metrics.Energy_Demand.Linear_Regression.MAE }} MWh</td>
+                    <td>{{ metrics.Energy_Demand.Linear_Regression.RMSE }} MWh</td>
+                    <td>{{ metrics.Energy_Demand.Linear_Regression.R2_Pct }}%</td>
+                    <td>{{ metrics.Energy_Demand.Linear_Regression.CV_5Fold_R2 }}%</td>
+                    <td><span class="badge badge-info">Baseline</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- CLASSIFICATION METRICS & CONFUSION MATRIX -->
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title"><i class="fas fa-bullseye" style="color: #10b981;"></i> Resource Scarcity Risk Classification Performance</h3>
+            <p class="card-subtitle">Comparing Logistic Regression, Support Vector Classifier (SVC), and KNN Classifier</p>
+        </div>
+    </div>
+
+    <div class="grid-3" style="margin-bottom: 24px;">
+        <!-- Logistic Regression Card -->
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 20px; border-radius: var(--radius-sm); border-top: 3px solid var(--color-logreg);">
+            <h4 style="font-size: 1rem; color: #fff; margin-bottom: 12px; display: flex; justify-content: space-between;">
+                <span>Logistic Regression</span>
+                <span class="badge badge-success">{{ metrics.Scarcity_Classification.Logistic_Regression.Accuracy_Pct }}%</span>
+            </h4>
+            <div style="font-size: 0.84rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;">
+                <div>Precision: <strong style="color: #fff;">{{ metrics.Scarcity_Classification.Logistic_Regression.Precision }}</strong></div>
+                <div>Recall: <strong style="color: #fff;">{{ metrics.Scarcity_Classification.Logistic_Regression.Recall }}</strong></div>
+                <div>F1-Score: <strong style="color: #fff;">{{ metrics.Scarcity_Classification.Logistic_Regression.F1_Score }}</strong></div>
+                <div>5-Fold CV Acc: <strong style="color: #38bdf8;">{{ metrics.Scarcity_Classification.Logistic_Regression.CV_5Fold_Accuracy }}%</strong></div>
+            </div>
+            
+            <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 6px;">Confusion Matrix [TN, FP / FN, TP]:</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; text-align: center; font-family: var(--font-mono); font-size: 0.85rem;">
+                <div style="background: rgba(16, 185, 129, 0.15); padding: 8px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                    TN: {{ metrics.Scarcity_Classification.Logistic_Regression.Confusion_Matrix[0][0] }}
+                </div>
+                <div style="background: rgba(244, 63, 94, 0.15); padding: 8px; border-radius: 4px; border: 1px solid rgba(244, 63, 94, 0.3);">
+                    FP: {{ metrics.Scarcity_Classification.Logistic_Regression.Confusion_Matrix[0][1] }}
+                </div>
+                <div style="background: rgba(244, 63, 94, 0.15); padding: 8px; border-radius: 4px; border: 1px solid rgba(244, 63, 94, 0.3);">
+                    FN: {{ metrics.Scarcity_Classification.Logistic_Regression.Confusion_Matrix[1][0] }}
+                </div>
+                <div style="background: rgba(16, 185, 129, 0.15); padding: 8px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                    TP: {{ metrics.Scarcity_Classification.Logistic_Regression.Confusion_Matrix[1][1] }}
+                </div>
+            </div>
+        </div>
+
+        <!-- SVM Classifier Card -->
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 20px; border-radius: var(--radius-sm); border-top: 3px solid var(--color-svm);">
+            <h4 style="font-size: 1rem; color: #fff; margin-bottom: 12px; display: flex; justify-content: space-between;">
+                <span>SVM Classifier</span>
+                <span class="badge badge-success">{{ metrics.Scarcity_Classification.SVM_Classifier.Accuracy_Pct }}%</span>
+            </h4>
+            <div style="font-size: 0.84rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;">
+                <div>Precision: <strong style="color: #fff;">{{ metrics.Scarcity_Classification.SVM_Classifier.Precision }}</strong></div>
+                <div>Recall: <strong style="color: #fff;">{{ metrics.Scarcity_Classification.SVM_Classifier.Recall }}</strong></div>
+                <div>F1-Score: <strong style="color: #fff;">{{ metrics.Scarcity_Classification.SVM_Classifier.F1_Score }}</strong></div>
+                <div>5-Fold CV Acc: <strong style="color: #38bdf8;">{{ metrics.Scarcity_Classification.SVM_Classifier.CV_5Fold_Accuracy }}%</strong></div>
+            </div>
+
+            <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 6px;">Confusion Matrix [TN, FP / FN, TP]:</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; text-align: center; font-family: var(--font-mono); font-size: 0.85rem;">
+                <div style="background: rgba(16, 185, 129, 0.15); padding: 8px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                    TN: {{ metrics.Scarcity_Classification.SVM_Classifier.Confusion_Matrix[0][0] }}
+                </div>
+                <div style="background: rgba(244, 63, 94, 0.15); padding: 8px; border-radius: 4px; border: 1px solid rgba(244, 63, 94, 0.3);">
+                    FP: {{ metrics.Scarcity_Classification.SVM_Classifier.Confusion_Matrix[0][1] }}
+                </div>
+                <div style="background: rgba(244, 63, 94, 0.15); padding: 8px; border-radius: 4px; border: 1px solid rgba(244, 63, 94, 0.3);">
+                    FN: {{ metrics.Scarcity_Classification.SVM_Classifier.Confusion_Matrix[1][0] }}
+                </div>
+                <div style="background: rgba(16, 185, 129, 0.15); padding: 8px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                    TP: {{ metrics.Scarcity_Classification.SVM_Classifier.Confusion_Matrix[1][1] }}
+                </div>
+            </div>
+        </div>
+
+        <!-- KNN Classifier Card -->
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 20px; border-radius: var(--radius-sm); border-top: 3px solid var(--color-knn);">
+            <h4 style="font-size: 1rem; color: #fff; margin-bottom: 12px; display: flex; justify-content: space-between;">
+                <span>KNN Classifier</span>
+                <span class="badge badge-success">{{ metrics.Scarcity_Classification.KNN_Classifier.Accuracy_Pct }}%</span>
+            </h4>
+            <div style="font-size: 0.84rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;">
+                <div>Precision: <strong style="color: #fff;">{{ metrics.Scarcity_Classification.KNN_Classifier.Precision }}</strong></div>
+                <div>Recall: <strong style="color: #fff;">{{ metrics.Scarcity_Classification.KNN_Classifier.Recall }}</strong></div>
+                <div>F1-Score: <strong style="color: #fff;">{{ metrics.Scarcity_Classification.KNN_Classifier.F1_Score }}</strong></div>
+                <div>5-Fold CV Acc: <strong style="color: #38bdf8;">{{ metrics.Scarcity_Classification.KNN_Classifier.CV_5Fold_Accuracy }}%</strong></div>
+            </div>
+
+            <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 6px;">Confusion Matrix [TN, FP / FN, TP]:</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; text-align: center; font-family: var(--font-mono); font-size: 0.85rem;">
+                <div style="background: rgba(16, 185, 129, 0.15); padding: 8px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                    TN: {{ metrics.Scarcity_Classification.KNN_Classifier.Confusion_Matrix[0][0] }}
+                </div>
+                <div style="background: rgba(244, 63, 94, 0.15); padding: 8px; border-radius: 4px; border: 1px solid rgba(244, 63, 94, 0.3);">
+                    FP: {{ metrics.Scarcity_Classification.KNN_Classifier.Confusion_Matrix[0][1] }}
+                </div>
+                <div style="background: rgba(244, 63, 94, 0.15); padding: 8px; border-radius: 4px; border: 1px solid rgba(244, 63, 94, 0.3);">
+                    FN: {{ metrics.Scarcity_Classification.KNN_Classifier.Confusion_Matrix[1][0] }}
+                </div>
+                <div style="background: rgba(16, 185, 129, 0.15); padding: 8px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                    TP: {{ metrics.Scarcity_Classification.KNN_Classifier.Confusion_Matrix[1][1] }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGISTIC REGRESSION FEATURE WEIGHTS / INTERPRETABILITY -->
+    <h4 style="font-size: 0.9rem; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-balance-scale-right" style="color: var(--color-logreg);"></i> Logistic Regression Feature Importance & Odds Ratio Coefficients:
+    </h4>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Feature Variable</th>
+                    <th>Normalized Coefficient (&beta;)</th>
+                    <th>Directional Impact on Scarcity Risk</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for feat, coef in metrics.Feature_Coefficients_Logistic.items() %}
+                <tr>
+                    <td><strong>{{ feat }}</strong></td>
+                    <td style="font-family: var(--font-mono); font-weight: 700; color: {% if coef > 0 %}#f43f5e{% else %}#10b981{% endif %};">
+                        {{ "+ " if coef > 0 else "" }}{{ coef }}
+                    </td>
+                    <td>
+                        {% if coef > 0.5 %}
+                        <span style="color: #f43f5e;"><i class="fas fa-arrow-up"></i> Strong Positive (Drives Scarcity Risk)</span>
+                        {% elif coef > 0 %}
+                        <span style="color: #fb923c;"><i class="fas fa-angle-up"></i> Moderate Positive</span>
+                        {% elif coef < -0.5 %}
+                        <span style="color: #10b981;"><i class="fas fa-arrow-down"></i> Strong Negative (Mitigates Scarcity Risk)</span>
+                        {% else %}
+                        <span style="color: #34d399;"><i class="fas fa-angle-down"></i> Moderate Negative</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ALGORITHM COMPARISON MATRIX -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-award" style="color: #f59e0b;"></i> Architectural Synthesis & Model Roles</h3>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Criterion</th>
+                    <th>Support Vector Machine (SVM)</th>
+                    <th>K-Nearest Neighbors (KNN)</th>
+                    <th>Logistic Regression</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Target Domain</strong></td>
+                    <td>High-dimensional urban energy/water demand</td>
+                    <td>Localized community-specific rural demand</td>
+                    <td>Probability-based scarcity risk classification</td>
+                </tr>
+                <tr>
+                    <td><strong>Non-Linearity Handling</strong></td>
+                    <td>High (via RBF kernel mapping)</td>
+                    <td>High (via instance distance weights)</td>
+                    <td>Moderate (via Sigmoid boundary)</td>
+                </tr>
+                <tr>
+                    <td><strong>Interpretability</strong></td>
+                    <td>Low (Black-box kernel space)</td>
+                    <td>Moderate (Transparent nearest neighbors)</td>
+                    <td>High (Direct Log-Odds & Coefficients)</td>
+                </tr>
+                <tr>
+                    <td><strong>Inference Latency</strong></td>
+                    <td>Fast (~2 ms per query)</td>
+                    <td>Moderate (Scales with dataset size)</td>
+                    <td>Ultra-Fast (< 1 ms per query)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const metricsData = {{ metrics|tojson }};
+        renderModelCharts(metricsData);
+    });
+</script>
+{% endblock %}

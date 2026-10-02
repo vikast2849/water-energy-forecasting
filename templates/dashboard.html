@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Population-Driven Demand Forecasting{% endblock %}
+{% block page_heading %}Executive Analytics Dashboard{% endblock %}
+
+{% block content %}
+<!-- KPI OVERVIEW -->
+<div class="kpi-grid">
+    <div class="kpi-card water">
+        <div class="kpi-header">
+            <span class="kpi-title">Avg Water Demand</span>
+            <div class="kpi-icon water"><i class="fas fa-tint"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpis.avg_water_mld }} <span style="font-size: 1rem; font-weight: 500;">MLD</span></div>
+        <div class="kpi-footer">
+            <span>Urban: <strong>{{ kpis.urban_lpcd }} LPCD</strong></span> • 
+            <span>Rural: <strong>{{ kpis.rural_lpcd }} LPCD</strong></span>
+        </div>
+    </div>
+
+    <div class="kpi-card energy">
+        <div class="kpi-header">
+            <span class="kpi-title">Avg Energy Demand</span>
+            <div class="kpi-icon energy"><i class="fas fa-bolt"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpis.avg_energy_mwh }} <span style="font-size: 1rem; font-weight: 500;">MWh/Day</span></div>
+        <div class="kpi-footer">
+            <span>Urban: <strong>{{ kpis.urban_kwh_capita }} kWh</strong></span> • 
+            <span>Rural: <strong>{{ kpis.rural_kwh_capita }} kWh</strong></span>
+        </div>
+    </div>
+
+    <div class="kpi-card alert">
+        <div class="kpi-header">
+            <span class="kpi-title">Scarcity Risk Alert</span>
+            <div class="kpi-icon alert"><i class="fas fa-exclamation-triangle"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpis.high_risk_pct }}%</div>
+        <div class="kpi-footer">
+            <span>{{ kpis.high_risk_count }} periods under stress</span> • 
+            <span>LogReg Conf: <strong>{{ metrics.Scarcity_Classification.Logistic_Regression.Accuracy_Pct }}%</strong></span>
+        </div>
+    </div>
+
+    <div class="kpi-card models">
+        <div class="kpi-header">
+            <span class="kpi-title">ML Framework Accuracy</span>
+            <div class="kpi-icon models"><i class="fas fa-brain"></i></div>
+        </div>
+        <div class="kpi-value">{{ metrics.Water_Demand.SVM.R2_Pct }}% <span style="font-size: 1rem; font-weight: 500;">R²</span></div>
+        <div class="kpi-footer">
+            <span>SVM: <strong>{{ metrics.Water_Demand.SVM.R2_Pct }}%</strong></span> • 
+            <span>KNN: <strong>{{ metrics.Water_Demand.KNN.R2_Pct }}%</strong></span>
+        </div>
+    </div>
+</div>
+
+<!-- CHARTS ROW: TIME-SERIES WATER & ENERGY PROJECTIONS -->
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title"><i class="fas fa-water" style="color: var(--color-water);"></i> Water Demand Trajectory (2019 - 2035)</h3>
+                <p class="card-subtitle">Historical observations + ML model projections to 2035 across Urban and Rural zones</p>
+            </div>
+            <span class="badge badge-urban">MLD Metric</span>
+        </div>
+        <div class="chart-box">
+            <canvas id="demandTrendsChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title"><i class="fas fa-solar-panel" style="color: var(--color-energy);"></i> Energy Demand Trajectory (2019 - 2035)</h3>
+                <p class="card-subtitle">Urban industrial/HVAC vs Rural seasonal irrigation pump loads</p>
+            </div>
+            <span class="badge badge-rural">MWh/Day</span>
+        </div>
+        <div class="chart-box">
+            <canvas id="energyTrendsChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- 3 ML MODELS ARCHITECTURE & ACCURACY SNAPSHOT -->
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title"><i class="fas fa-layer-group" style="color: #818cf8;"></i> Tri-Model Machine Learning Architecture</h3>
+            <p class="card-subtitle">Benchmarked on 5-Fold Cross Validation as specified in Dept. of CS&E, SJMIT Project Plan</p>
+        </div>
+        <a href="{{ url_for('models_view') }}" class="btn btn-outline" style="font-size: 0.78rem;">Detailed Metrics &rarr;</a>
+    </div>
+
+    <div class="grid-3">
+        <!-- Model 1: SVM -->
+        <div style="background: rgba(15, 23, 42, 0.5); padding: 18px; border-radius: var(--radius-sm); border-left: 4px solid var(--color-svm);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h4 style="font-size: 0.95rem; color: #fff;">1. Support Vector Machine</h4>
+                <span class="badge" style="background: rgba(129, 140, 248, 0.2); color: #818cf8;">SVM / SVR</span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+                RBF kernel mapping demographic and climate features for non-linear high-dimensional demand estimation.
+            </p>
+            <div style="font-size: 0.82rem; display: flex; flex-direction: column; gap: 4px;">
+                <div>Water R² Score: <strong style="color: var(--color-water);">{{ metrics.Water_Demand.SVM.R2_Pct }}%</strong> (MAE: {{ metrics.Water_Demand.SVM.MAE }})</div>
+                <div>Energy R² Score: <strong style="color: var(--color-energy);">{{ metrics.Energy_Demand.SVM.R2_Pct }}%</strong></div>
+                <div>Risk Accuracy: <strong style="color: var(--color-success);">{{ metrics.Scarcity_Classification.SVM_Classifier.Accuracy_Pct }}%</strong></div>
+            </div>
+        </div>
+
+        <!-- Model 2: KNN -->
+        <div style="background: rgba(15, 23, 42, 0.5); padding: 18px; border-radius: var(--radius-sm); border-left: 4px solid var(--color-knn);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h4 style="font-size: 0.95rem; color: #fff;">2. K-Nearest Neighbors</h4>
+                <span class="badge" style="background: rgba(236, 72, 153, 0.2); color: #ec4899;">KNN (k=5)</span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+                Distance-weighted spatial neighborhood interpolation; excelling at community-specific rural demand.
+            </p>
+            <div style="font-size: 0.82rem; display: flex; flex-direction: column; gap: 4px;">
+                <div>Water R² Score: <strong style="color: var(--color-water);">{{ metrics.Water_Demand.KNN.R2_Pct }}%</strong> (MAE: {{ metrics.Water_Demand.KNN.MAE }})</div>
+                <div>Energy R² Score: <strong style="color: var(--color-energy);">{{ metrics.Energy_Demand.KNN.R2_Pct }}%</strong></div>
+                <div>Risk Accuracy: <strong style="color: var(--color-success);">{{ metrics.Scarcity_Classification.KNN_Classifier.Accuracy_Pct }}%</strong></div>
+            </div>
+        </div>
+
+        <!-- Model 3: Logistic Regression -->
+        <div style="background: rgba(15, 23, 42, 0.5); padding: 18px; border-radius: var(--radius-sm); border-left: 4px solid var(--color-logreg);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h4 style="font-size: 0.95rem; color: #fff;">3. Logistic Regression</h4>
+                <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">LogReg / Sigmoid</span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+                Interpretability and calibrated probability modeling for resource scarcity risk alert detection.
+            </p>
+            <div style="font-size: 0.82rem; display: flex; flex-direction: column; gap: 4px;">
+                <div>Risk Classification: <strong style="color: var(--color-success);">{{ metrics.Scarcity_Classification.Logistic_Regression.Accuracy_Pct }}%</strong></div>
+                <div>Precision: <strong>{{ metrics.Scarcity_Classification.Logistic_Regression.Precision }}</strong> | Recall: <strong>{{ metrics.Scarcity_Classification.Logistic_Regression.Recall }}</strong></div>
+                <div>5-Fold CV Accuracy: <strong style="color: #38bdf8;">{{ metrics.Scarcity_Classification.Logistic_Regression.CV_5Fold_Accuracy }}%</strong></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- QUICK ACTION BANNER -->
+<div class="card" style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(37, 99, 235, 0.15)); border-color: rgba(56, 189, 248, 0.3);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <h3 style="color: #fff; font-size: 1.1rem; margin-bottom: 4px;">Ready to run a live demand forecast?</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Input localized parameters or select regional presets (e.g. Chitradurga Urban, Challakere Rural) to generate simultaneous SVM, KNN & Logistic Regression predictions.</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a href="{{ url_for('predict_page') }}" class="btn btn-primary"><i class="fas fa-play"></i> Open Live Studio</a>
+            <a href="{{ url_for('simulation') }}" class="btn btn-outline"><i class="fas fa-sliders-h"></i> Stress Test Simulator</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const trendsData = {{ trends|tojson }};
+        renderDashboardCharts(trendsData);
+    });
+</script>
+{% endblock %}

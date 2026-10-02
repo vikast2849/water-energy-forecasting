@@ -1,0 +1,129 @@
+{
+    "Water_Demand": {
+        "SVM": {
+            "MAE": 1.491,
+            "RMSE": 2.433,
+            "R2_Score": 0.9986,
+            "R2_Pct": 99.86,
+            "CV_5Fold_R2": 99.79
+        },
+        "KNN": {
+            "MAE": 4.42,
+            "RMSE": 6.955,
+            "R2_Score": 0.9884,
+            "R2_Pct": 98.84,
+            "CV_5Fold_R2": 98.89
+        },
+        "Linear_Regression": {
+            "MAE": 3.758,
+            "RMSE": 4.681,
+            "R2_Score": 0.9948,
+            "R2_Pct": 99.48,
+            "CV_5Fold_R2": 99.48
+        }
+    },
+    "Energy_Demand": {
+        "SVM": {
+            "MAE": 186.068,
+            "RMSE": 488.91,
+            "R2_Score": 0.9306,
+            "R2_Pct": 93.06,
+            "CV_5Fold_R2": 95.21
+        },
+        "KNN": {
+            "MAE": 98.33,
+            "RMSE": 198.716,
+            "R2_Score": 0.9885,
+            "R2_Pct": 98.85,
+            "CV_5Fold_R2": 98.67
+        },
+        "Linear_Regression": {
+            "MAE": 247.662,
+            "RMSE": 381.204,
+            "R2_Score": 0.9578,
+            "R2_Pct": 95.78,
+            "CV_5Fold_R2": 96.69
+        }
+    },
+    "Scarcity_Classification": {
+        "Logistic_Regression": {
+            "Accuracy": 0.9135,
+            "Accuracy_Pct": 91.35,
+            "Precision": 0.974,
+            "Recall": 0.925,
+            "F1_Score": 0.949,
+            "CV_5Fold_Accuracy": 85.18,
+            "Confusion_Matrix": [
+                [
+                    20,
+                    4
+                ],
+                [
+                    12,
+                    149
+                ]
+            ]
+        },
+        "SVM_Classifier": {
+            "Accuracy": 0.9405,
+            "Accuracy_Pct": 94.05,
+            "Precision": 0.941,
+            "Recall": 0.994,
+            "F1_Score": 0.967,
+            "CV_5Fold_Accuracy": 93.83,
+            "Confusion_Matrix": [
+                [
+                    14,
+                    10
+                ],
+                [
+                    1,
+                    160
+                ]
+            ]
+        },
+        "KNN_Classifier": {
+            "Accuracy": 0.9405,
+            "Accuracy_Pct": 94.05,
+            "Precision": 0.946,
+            "Recall": 0.988,
+            "F1_Score": 0.967,
+            "CV_5Fold_Accuracy": 93.07,
+            "Confusion_Matrix": [
+                [
+                    15,
+                    9
+                ],
+                [
+                    2,
+                    159
+                ]
+            ]
+        }
+    },
+    "Feature_Coefficients_Logistic": {
+        "Population": 0.3819,
+        "Population_Density": 2.8951,
+        "Household_Size": 0.5884,
+        "Avg_Temperature_C": 0.1079,
+        "Rainfall_mm": -1.4447,
+        "Industrial_Index": 0.1236,
+        "Agricultural_Index": 0.8222,
+        "Water_Piped_Coverage_Pct": 0.2642,
+        "Electrification_Pct": -0.5274,
+        "Is_Urban": -0.9825,
+        "Season_Summer": 1.212,
+        "Season_Monsoon": -0.4187,
+        "Season_Winter": -0.6642,
+        "Thermal_Stress_Index": 0.1079,
+        "Dryness_Factor": 0.2234
+    },
+    "Dataset_Summary": {
+        "Total_Records": 924,
+        "Urban_Records": 420,
+        "Rural_Records": 504,
+        "Regions_Count": 11,
+        "Features_Count": 15,
+        "Years_Covered": "2019 - 2025"
+    }
+}

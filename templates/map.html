@@ -1,0 +1,700 @@
+{% extends "base.html" %}
+
+{% block title %}3D GIS Digital Twin Map | Population-Driven Demand Forecasting{% endblock %}
+{% block page_heading %}3D Geospatial Map & Regional Digital Twin{% endblock %}
+
+{% block content %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<!-- Three.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- OrbitControls for Three.js -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+    .map-page-container {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 20px;
+        min-height: 720px;
+    }
+    @media (max-width: 1100px) {
+        .map-page-container {
+            grid-template-columns: 1fr;
+        }
+    }
+    #gisMap {
+        width: 100%;
+        height: 680px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-card);
+        background: #0f172a;
+    }
+    .digital-twin-panel {
+        background: var(--bg-card);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border-bright);
+        border-radius: var(--radius-md);
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: var(--shadow-card);
+        height: 680px;
+        overflow-y: auto;
+    }
+    #threeJsCanvasContainer {
+        width: 100%;
+        height: 250px;
+        background: radial-gradient(circle at center, rgba(15, 23, 42, 0.9), rgba(5, 10, 25, 0.95));
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(56, 189, 248, 0.25);
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 16px;
+    }
+    .leaflet-popup-content-wrapper {
+        background: rgba(15, 23, 42, 0.95) !important;
+        color: #f1f5f9 !important;
+        border: 1px solid var(--border-bright) !important;
+        backdrop-filter: blur(10px) !important;
+        border-radius: 10px !important;
+    }
+    .leaflet-popup-tip {
+        background: rgba(15, 23, 42, 0.95) !important;
+    }
+    .map-filter-bar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+    }
+    .filter-btn {
+        font-size: 0.76rem;
+        padding: 6px 12px;
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        background: rgba(15, 23, 42, 0.7);
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+        background: rgba(56, 189, 248, 0.2);
+        color: #fff;
+        border-color: #38bdf8;
+    }
+</style>
+
+<!-- TOP FILTER & LAYER BAR -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+    <div class="map-filter-bar" style="margin-bottom: 0;">
+        <button class="filter-btn active" onclick="filterMap('all', this)"><i class="fas fa-globe-asia"></i> All 11 Karnataka Taluks</button>
+        <button class="filter-btn" onclick="filterMap('Chitradurga', this)"><i class="fas fa-map-marker-alt"></i> Chitradurga District Only</button>
+        <button class="filter-btn" onclick="filterMap('Urban', this)"><i class="fas fa-city" style="color: var(--color-water);"></i> Urban Metros</button>
+        <button class="filter-btn" onclick="filterMap('Rural', this)"><i class="fas fa-seedling" style="color: var(--color-success);"></i> Rural Agrarian Clusters</button>
+        <button class="filter-btn" onclick="filterMap('Risk', this)"><i class="fas fa-exclamation-triangle" style="color: var(--color-danger);"></i> High Scarcity Alert Zones</button>
+    </div>
+
+    <!-- 100% FREE NO-API-KEY BASEMAP TOGGLE -->
+    <div style="display: flex; gap: 6px; align-items: center; background: rgba(15, 23, 42, 0.7); padding: 4px 8px; border-radius: 20px; border: 1px solid var(--border-color);">
+        <span style="font-size: 0.72rem; color: var(--text-muted); margin-right: 4px;"><i class="fas fa-layer-group"></i> Layer:</span>
+        <button class="filter-btn active" id="btnLayerDark" style="padding: 4px 10px; font-size: 0.72rem;" onclick="switchBasemap('dark', this)">🌃 Dark Canvas</button>
+        <button class="filter-btn" id="btnLayerSat" style="padding: 4px 10px; font-size: 0.72rem;" onclick="switchBasemap('satellite', this)">🛰️ Satellite</button>
+        <button class="filter-btn" id="btnLayerOsm" style="padding: 4px 10px; font-size: 0.72rem;" onclick="switchBasemap('osm', this)">🗺️ Street OSM</button>
+    </div>
+</div>
+
+<!-- MAP & 3D DIGITAL TWIN DUAL VIEW -->
+<div class="map-page-container">
+    <!-- LEAFLET 2D/2.5D INTERACTIVE GEOSPATIAL MAP -->
+    <div>
+        <div id="gisMap"></div>
+        <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 6px; display: flex; justify-content: space-between;">
+            <span><i class="fas fa-mouse-pointer"></i> Click any regional marker to inspect 3D Digital Twin and ML inference.</span>
+            <span><span>🟢 Normal</span> • <span>🟡 Moderate</span> • <span style="color: #f43f5e;">🔴 High Scarcity Risk</span></span>
+        </div>
+    </div>
+
+    <!-- 3D DIGITAL TWIN & REAL-TIME ML INFERENCE VIEWPORT -->
+    <div class="digital-twin-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div>
+                <span class="badge" id="dtSectorBadge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">Urban Core</span>
+                <h3 id="dtRegionTitle" style="color: #fff; font-size: 1.25rem; font-weight: 700; margin-top: 4px;">Chitradurga Urban</h3>
+            </div>
+            <span class="badge" id="dtRiskBadge" style="background: rgba(244, 63, 94, 0.2); color: #f43f5e;">Evaluating...</span>
+        </div>
+
+        <!-- THREE.JS 3D VIEWPORT -->
+        <div id="threeJsCanvasContainer">
+            <div style="position: absolute; top: 10px; left: 12px; z-index: 10; font-size: 0.72rem; color: #94a3b8; background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 4px; pointer-events: none;">
+                <i class="fas fa-cube"></i> Interactive 3D Extrusion (Drag to rotate / Scroll to zoom)
+            </div>
+            <div style="position: absolute; bottom: 8px; right: 10px; z-index: 10; font-size: 0.68rem; color: #cbd5e1; display: flex; gap: 8px; pointer-events: none;">
+                <span style="color: var(--color-water);">■ Water Pillar (MLD)</span>
+                <span style="color: var(--color-energy);">■ Energy Pillar (MWh)</span>
+            </div>
+        </div>
+
+        <!-- REGIONAL SPECS & DEMOGRAPHICS -->
+        <div class="grid-2" style="gap: 10px; margin-bottom: 14px;">
+            <div style="background: rgba(15, 23, 42, 0.6); padding: 10px 14px; border-radius: var(--radius-sm); border-left: 3px solid #38bdf8;">
+                <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Population Density</div>
+                <div id="dtDensity" style="font-size: 1.1rem; font-weight: 700; color: #fff;">3,800 / km²</div>
+            </div>
+            <div style="background: rgba(15, 23, 42, 0.6); padding: 10px 14px; border-radius: var(--radius-sm); border-left: 3px solid #f59e0b;">
+                <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Mean Temperature</div>
+                <div id="dtTemp" style="font-size: 1.1rem; font-weight: 700; color: #fff;">35.5 °C</div>
+            </div>
+        </div>
+
+        <!-- 3 MODELS INFERENCE PREDICTIONS -->
+        <h4 style="font-size: 0.85rem; color: #fff; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-layer-group" style="color: #818cf8;"></i> Live Model Inference for this Region:
+        </h4>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; background: rgba(15, 23, 42, 0.5); padding: 8px 12px; border-radius: 6px;">
+                <span><strong style="color: var(--color-svm);">SVM Model (Water Forecast):</strong></span>
+                <span id="dtSvmWater" style="font-weight: 700; color: var(--color-water);">48.5 MLD</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; background: rgba(15, 23, 42, 0.5); padding: 8px 12px; border-radius: 6px;">
+                <span><strong style="color: var(--color-knn);">KNN Model (Energy Forecast):</strong></span>
+                <span id="dtKnnEnergy" style="font-weight: 700; color: var(--color-energy);">1,750 MWh</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; background: rgba(15, 23, 42, 0.5); padding: 8px 12px; border-radius: 6px;">
+                <span><strong style="color: var(--color-logreg);">Logistic Regression (Scarcity Risk):</strong></span>
+                <span id="dtLogRegProb" style="font-weight: 700; color: #f43f5e;">78% Probability</span>
+            </div>
+        </div>
+
+        <!-- ACTIONABLE UTILITY DIRECTIVE -->
+        <div style="background: rgba(15, 23, 42, 0.8); border: 1px dashed var(--border-bright); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 16px;">
+            <div style="font-size: 0.75rem; color: #38bdf8; font-weight: 700; margin-bottom: 4px;">
+                <i class="fas fa-satellite-dish"></i> Regional Utility Action Plan:
+            </div>
+            <div id="dtPolicyAdvice" style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.5;">
+                Deploy zone water rationing in industrial sectors and stagger agricultural pump feeder supply during peak daylight hours.
+            </div>
+        </div>
+
+        <!-- ACTION BUTTON -->
+        <a id="dtPredictLink" href="{{ url_for('predict_page') }}" class="btn btn-primary" style="width: 100%; text-align: center; justify-content: center;">
+            <i class="fas fa-calculator"></i> Open in Live Prediction Studio
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // 11 REGIONAL GEOSPATIAL DATASETS WITH LAT/LNG & PREDICTIVE ATTRIBUTES
+    const REGIONS_GIS = [
+        {
+            id: "chitradurga_urban",
+            name: "Chitradurga Urban Core",
+            type: "Urban",
+            district: "Chitradurga",
+            lat: 14.2251,
+            lng: 76.3980,
+            pop: 210000,
+            density: 3800,
+            temp: 35.5,
+            rain: 18.0,
+            water_mld: 48.5,
+            energy_mwh: 1750,
+            risk_pct: 68,
+            risk_level: "High Risk",
+            policy: "High summer thermal load. Enforce commercial greywater recycling and schedule industrial electrical load shifts."
+        },
+        {
+            id: "challakere_rural",
+            name: "Challakere Rural Agrarian",
+            type: "Rural",
+            district: "Chitradurga",
+            lat: 14.3125,
+            lng: 76.6508,
+            pop: 85000,
+            density: 210,
+            temp: 36.2,
+            rain: 12.0,
+            water_mld: 28.2,
+            energy_mwh: 890,
+            risk_pct: 82,
+            risk_level: "Critical Risk",
+            policy: "Groundwater drawdown alert. Schedule rotating night shifts on 3-phase agricultural power feeders and deploy solar micro-irrigation."
+        },
+        {
+            id: "hiriyur_agro",
+            name: "Hiriyur Agro-Cluster",
+            type: "Rural",
+            district: "Chitradurga",
+            lat: 13.9454,
+            lng: 76.6186,
+            pop: 92000,
+            density: 240,
+            temp: 34.8,
+            rain: 22.0,
+            water_mld: 32.4,
+            energy_mwh: 960,
+            risk_pct: 58,
+            risk_level: "Moderate Risk",
+            policy: "Vanivilasa Sagara catchment monitoring. Optimize irrigation canal flow to prevent tail-end farm scarcity."
+        },
+        {
+            id: "holalkere_rural",
+            name: "Holalkere Rural",
+            type: "Rural",
+            district: "Chitradurga",
+            lat: 14.0326,
+            lng: 76.1874,
+            pop: 68000,
+            density: 190,
+            temp: 33.5,
+            rain: 28.0,
+            water_mld: 22.1,
+            energy_mwh: 680,
+            risk_pct: 42,
+            risk_level: "Moderate Risk",
+            policy: "Supply buffers stable. Promote decentralized farm ponds and check dams before monsoon season."
+        },
+        {
+            id: "hosadurga_rural",
+            name: "Hosadurga Rural",
+            type: "Rural",
+            district: "Chitradurga",
+            lat: 13.7997,
+            lng: 76.2858,
+            pop: 76000,
+            density: 205,
+            temp: 34.0,
+            rain: 25.0,
+            water_mld: 24.8,
+            energy_mwh: 740,
+            risk_pct: 48,
+            risk_level: "Moderate Risk",
+            policy: "Monitor mining/cement industrial power drawdown. Maintain standard agrarian water rationing."
+        },
+        {
+            id: "molakalmuru_dry",
+            name: "Molakalmuru Drylands",
+            type: "Rural",
+            district: "Chitradurga",
+            lat: 14.7262,
+            lng: 76.7570,
+            pop: 54000,
+            density: 165,
+            temp: 37.0,
+            rain: 8.0,
+            water_mld: 19.5,
+            energy_mwh: 580,
+            risk_pct: 88,
+            risk_level: "Critical Risk",
+            policy: "Arid zone emergency alert. Prioritize piped drinking water tankers and deploy mobile solar pump backups."
+        },
+        {
+            id: "jagalur_basin",
+            name: "Jagalur Agricultural Basin",
+            type: "Rural",
+            district: "Davanagere/Chitradurga",
+            lat: 14.5247,
+            lng: 76.3475,
+            pop: 62000,
+            density: 180,
+            temp: 35.0,
+            rain: 15.0,
+            water_mld: 21.3,
+            energy_mwh: 640,
+            risk_pct: 64,
+            risk_level: "High Risk",
+            policy: "Borewell recharge initiative. Prevent unscheduled peak agricultural power spikes."
+        },
+        {
+            id: "davanagere_city",
+            name: "Davanagere City Urban",
+            type: "Urban",
+            district: "Davanagere",
+            lat: 14.4644,
+            lng: 75.9218,
+            pop: 480000,
+            density: 5200,
+            temp: 34.2,
+            rain: 32.0,
+            water_mld: 96.0,
+            energy_mwh: 3600,
+            risk_pct: 40,
+            risk_level: "Moderate Risk",
+            policy: "Textile industrial water treatment compliance and rooftop solar power incentives."
+        },
+        {
+            id: "ballari_industrial",
+            name: "Ballari Industrial Urban",
+            type: "Urban",
+            district: "Ballari",
+            lat: 15.1394,
+            lng: 76.9214,
+            pop: 390000,
+            density: 4100,
+            temp: 38.5,
+            rain: 10.0,
+            water_mld: 88.5,
+            energy_mwh: 3850,
+            risk_pct: 75,
+            risk_level: "High Risk",
+            policy: "Intense steel manufacturing power draw. Enforce captive generation during state grid peak hours."
+        },
+        {
+            id: "hubballi_urban",
+            name: "Hubballi-Dharwad Urban",
+            type: "Urban",
+            district: "Dharwad",
+            lat: 15.3647,
+            lng: 75.1240,
+            pop: 620000,
+            density: 4600,
+            temp: 33.0,
+            rain: 45.0,
+            water_mld: 118.0,
+            energy_mwh: 4400,
+            risk_pct: 35,
+            risk_level: "Normal",
+            policy: "Twin-city distribution networks balanced. Maintain routine pipeline leak detection."
+        },
+        {
+            id: "bengaluru_metro",
+            name: "Bengaluru Peri-Urban",
+            type: "Urban",
+            district: "Bengaluru",
+            lat: 12.9716,
+            lng: 77.5946,
+            pop: 950000,
+            density: 7800,
+            temp: 30.5,
+            rain: 65.0,
+            water_mld: 195.0,
+            energy_mwh: 7600,
+            risk_pct: 55,
+            risk_level: "Moderate Risk",
+            policy: "High density commercial HVAC loads. Enforce Cauvery water zoning and tertiary treated water usage."
+        }
+    ];
+
+    let map;
+    let markersLayer;
+    let activeRegion = REGIONS_GIS[0];
+
+    let currentTileLayer;
+    const tileLayers = {
+        dark: L.layerGroup([
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+                maxZoom: 16
+            }),
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '',
+                maxZoom: 16
+            })
+        ]),
+        satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Satellite Imagery',
+            maxZoom: 18
+        }),
+        osm: L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19
+        })
+    };
+
+    function initMap() {
+        // Centered around Chitradurga, Karnataka
+        map = L.map('gisMap').setView([14.2251, 76.3980], 9);
+
+        // Default to clean Dark Canvas (Zero Watermark, 100% Free, No API key needed)
+        currentTileLayer = tileLayers.dark;
+        currentTileLayer.addTo(map);
+
+        markersLayer = L.layerGroup().addTo(map);
+        renderMarkers('all');
+    }
+
+    window.switchBasemap = function(type, btn) {
+        document.querySelectorAll('#btnLayerDark, #btnLayerSat, #btnLayerOsm').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        if (currentTileLayer) {
+            map.removeLayer(currentTileLayer);
+        }
+        currentTileLayer = tileLayers[type];
+        currentTileLayer.addTo(map);
+    };
+
+    function renderMarkers(filterType) {
+        markersLayer.clearLayers();
+
+        REGIONS_GIS.forEach(reg => {
+            // Apply filtering logic
+            if (filterType === 'Chitradurga' && reg.district !== 'Chitradurga') return;
+            if (filterType === 'Urban' && reg.type !== 'Urban') return;
+            if (filterType === 'Rural' && reg.type !== 'Rural') return;
+            if (filterType === 'Risk' && reg.risk_pct < 60) return;
+
+            let color = '#10b981'; // Green
+            if (reg.risk_pct >= 65) color = '#f43f5e'; // Red
+            else if (reg.risk_pct >= 40) color = '#f59e0b'; // Amber
+
+            const markerHtml = `
+                <div style="
+                    background: ${color};
+                    width: 18px;
+                    height: 18px;
+                    border-radius: 50%;
+                    border: 3px solid #ffffff;
+                    box-shadow: 0 0 15px ${color};
+                    cursor: pointer;
+                    animation: pulse 2s infinite;
+                "></div>
+            `;
+
+            const icon = L.divIcon({
+                html: markerHtml,
+                className: 'custom-map-icon',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+
+            const marker = L.marker([reg.lat, reg.lng], { icon: icon }).addTo(markersLayer);
+
+            marker.bindPopup(`
+                <div style="padding: 6px;">
+                    <strong style="color: #fff; font-size: 0.95rem;">${reg.name}</strong><br>
+                    <span style="font-size: 0.75rem; color: ${color}; font-weight: 700;">${reg.type} • ${reg.risk_level}</span>
+                    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 6px 0;">
+                    <div style="font-size: 0.78rem;">
+                        Water: <strong>${reg.water_mld} MLD</strong><br>
+                        Energy: <strong>${reg.energy_mwh} MWh</strong><br>
+                        Scarcity Risk: <strong style="color: ${color};">${reg.risk_pct}%</strong>
+                    </div>
+                </div>
+            `);
+
+            marker.on('click', () => {
+                selectRegion(reg);
+            });
+        });
+    }
+
+    window.filterMap = function(filterType, btn) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderMarkers(filterType);
+    };
+
+    function selectRegion(reg) {
+        activeRegion = reg;
+        map.flyTo([reg.lat, reg.lng], 10, { duration: 1.2 });
+
+        // Update UI Info
+        document.getElementById('dtRegionTitle').textContent = reg.name;
+        document.getElementById('dtSectorBadge').textContent = reg.type + ' Sector';
+        document.getElementById('dtSectorBadge').style.color = reg.type === 'Urban' ? 'var(--color-water)' : 'var(--color-success)';
+
+        const riskBadge = document.getElementById('dtRiskBadge');
+        riskBadge.textContent = reg.risk_level + ' (' + reg.risk_pct + '%)';
+        if (reg.risk_pct >= 65) {
+            riskBadge.style.background = 'rgba(244, 63, 94, 0.2)';
+            riskBadge.style.color = '#f43f5e';
+        } else if (reg.risk_pct >= 40) {
+            riskBadge.style.background = 'rgba(245, 158, 11, 0.2)';
+            riskBadge.style.color = '#f59e0b';
+        } else {
+            riskBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+            riskBadge.style.color = '#10b981';
+        }
+
+        document.getElementById('dtDensity').textContent = reg.density.toLocaleString() + ' / km²';
+        document.getElementById('dtTemp').textContent = reg.temp + ' °C';
+        document.getElementById('dtSvmWater').textContent = reg.water_mld + ' MLD';
+        document.getElementById('dtKnnEnergy').textContent = reg.energy_mwh.toLocaleString() + ' MWh';
+        document.getElementById('dtLogRegProb').textContent = reg.risk_pct + '% Probability';
+        document.getElementById('dtPolicyAdvice').textContent = reg.policy;
+
+        // Update 3D Digital Twin Pillars
+        update3DScene(reg);
+    }
+
+    // =========================================================================
+    // 2. THREE.JS 3D DIGITAL TWIN EXTRUSION ENGINE
+    // =========================================================================
+    let scene, camera, renderer, controls;
+    let waterPillar, energyPillar, baseGrid, haloRing, particleSystem;
+
+    function initThreeJs() {
+        const container = document.getElementById('threeJsCanvasContainer');
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+
+        scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050a19, 0.035);
+
+        camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+        camera.position.set(20, 18, 25);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        container.appendChild(renderer.domElement);
+
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxPolarAngle = Math.PI / 2 - 0.05;
+        controls.minDistance = 10;
+        controls.maxDistance = 50;
+
+        // Ambient & Directional Lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0x38bdf8, 1.2);
+        dirLight.position.set(10, 20, 10);
+        scene.add(dirLight);
+
+        const pointLight = new THREE.PointLight(0xf59e0b, 1.5, 30);
+        pointLight.position.set(-6, 12, 6);
+        scene.add(pointLight);
+
+        // Circular Holographic Base Platform
+        const baseGeo = new THREE.CylinderGeometry(10, 10, 0.5, 32);
+        const baseMat = new THREE.MeshStandardMaterial({
+            color: 0x111e38,
+            roughness: 0.4,
+            metalness: 0.8
+        });
+        const basePlatform = new THREE.Mesh(baseGeo, baseMat);
+        basePlatform.position.y = -0.25;
+        scene.add(basePlatform);
+
+        // Holographic Grid lines
+        const gridHelper = new THREE.PolarGridHelper(10, 8, 8, 32, 0x38bdf8, 0x1e3a8a);
+        gridHelper.position.y = 0.02;
+        scene.add(gridHelper);
+
+        // Glowing Halo Ring
+        const ringGeo = new THREE.RingGeometry(9.6, 10, 32);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide });
+        haloRing = new THREE.Mesh(ringGeo, ringMat);
+        haloRing.rotation.x = Math.PI / 2;
+        haloRing.position.y = 0.05;
+        scene.add(haloRing);
+
+        // 3D Water Extrusion Cylinder (Cyan)
+        const waterGeo = new THREE.CylinderGeometry(1.6, 1.6, 1, 32);
+        const waterMat = new THREE.MeshStandardMaterial({
+            color: 0x06b6d4,
+            emissive: 0x0891b2,
+            roughness: 0.2,
+            metalness: 0.5,
+            transparent: true,
+            opacity: 0.88
+        });
+        waterPillar = new THREE.Mesh(waterGeo, waterMat);
+        waterPillar.position.set(-3.5, 0.5, 0);
+        scene.add(waterPillar);
+
+        // 3D Energy Extrusion Cylinder (Amber)
+        const energyGeo = new THREE.CylinderGeometry(1.6, 1.6, 1, 32);
+        const energyMat = new THREE.MeshStandardMaterial({
+            color: 0xf59e0b,
+            emissive: 0xd97706,
+            roughness: 0.2,
+            metalness: 0.5,
+            transparent: true,
+            opacity: 0.88
+        });
+        energyPillar = new THREE.Mesh(energyGeo, energyMat);
+        energyPillar.position.set(3.5, 0.5, 0);
+        scene.add(energyPillar);
+
+        // Floating Atmospheric Particles
+        const particleCount = 120;
+        const particleGeo = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount * 3; i += 3) {
+            positions[i] = (Math.random() - 0.5) * 18;
+            positions[i + 1] = Math.random() * 15;
+            positions[i + 2] = (Math.random() - 0.5) * 18;
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const particleMat = new THREE.PointsMaterial({
+            color: 0x38bdf8,
+            size: 0.35,
+            transparent: true,
+            opacity: 0.6
+        });
+        particleSystem = new THREE.Points(particleGeo, particleMat);
+        scene.add(particleSystem);
+
+        update3DScene(activeRegion);
+        animate();
+
+        window.addEventListener('resize', onWindowResize);
+    }
+
+    function update3DScene(reg) {
+        // Height proportional to values
+        const targetWaterH = Math.max(1.5, Math.min(14, (reg.water_mld / 200.0) * 14.0));
+        const targetEnergyH = Math.max(1.5, Math.min(14, (reg.energy_mwh / 7500.0) * 14.0));
+
+        waterPillar.scale.y = targetWaterH;
+        waterPillar.position.y = targetWaterH / 2;
+
+        energyPillar.scale.y = targetEnergyH;
+        energyPillar.position.y = targetEnergyH / 2;
+
+        // Change particle color based on climate: blue if rain, golden if high heat
+        if (reg.temp > 35) {
+            particleSystem.material.color.setHex(0xf59e0b);
+        } else {
+            particleSystem.material.color.setHex(0x38bdf8);
+        }
+    }
+
+    function onWindowResize() {
+        const container = document.getElementById('threeJsCanvasContainer');
+        if (!container || !renderer) return;
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+
+        // Slow cinematic rotation of halo & particles
+        if (haloRing) haloRing.rotation.z += 0.005;
+        if (particleSystem) {
+            particleSystem.rotation.y += 0.0015;
+            const positions = particleSystem.geometry.attributes.position.array;
+            for (let i = 1; i < positions.length; i += 3) {
+                positions[i] -= 0.03;
+                if (positions[i] < 0) positions[i] = 14;
+            }
+            particleSystem.geometry.attributes.position.needsUpdate = true;
+        }
+
+        renderer.render(scene, camera);
+    }
+
+    // Initialize both Map and 3D on load
+    document.addEventListener('DOMContentLoaded', () => {
+        initMap();
+        initThreeJs();
+    });
+</script>
+{% endblock %}

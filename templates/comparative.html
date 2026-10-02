@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Urban vs Rural Disparity | Population-Driven Demand Forecasting{% endblock %}
+{% block page_heading %}Urban vs. Rural Demand Disparity Framework{% endblock %}
+
+{% block content %}
+<!-- DISPARITY KPI ROW -->
+<div class="kpi-grid">
+    <div class="kpi-card water">
+        <div class="kpi-header">
+            <span class="kpi-title">Water Inequity Ratio</span>
+            <div class="kpi-icon water"><i class="fas fa-water"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpis.water_disparity_ratio }}x <span style="font-size: 1rem; font-weight: 500;">Per Capita Gap</span></div>
+        <div class="kpi-footer">
+            Urban: <strong>{{ kpis.urban_lpcd }} LPCD</strong> vs Rural: <strong>{{ kpis.rural_lpcd }} LPCD</strong>
+        </div>
+    </div>
+
+    <div class="kpi-card energy">
+        <div class="kpi-header">
+            <span class="kpi-title">Energy Consumption Gap</span>
+            <div class="kpi-icon energy"><i class="fas fa-bolt"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpis.energy_disparity_ratio }}x <span style="font-size: 1rem; font-weight: 500;">Per Capita Gap</span></div>
+        <div class="kpi-footer">
+            Urban: <strong>{{ kpis.urban_kwh_capita }} kWh</strong> vs Rural: <strong>{{ kpis.rural_kwh_capita }} kWh</strong>
+        </div>
+    </div>
+
+    <div class="kpi-card alert">
+        <div class="kpi-header">
+            <span class="kpi-title">Summer Scarcity Vulnerability</span>
+            <div class="kpi-icon alert"><i class="fas fa-sun"></i></div>
+        </div>
+        <div class="kpi-value">High <span style="font-size: 1rem; font-weight: 500;">in Agrarian Basins</span></div>
+        <div class="kpi-footer">
+            <span>Groundwater drawdown in Challakere & Molakalmuru</span>
+        </div>
+    </div>
+
+    <div class="kpi-card models">
+        <div class="kpi-header">
+            <span class="kpi-title">Monitored Taluks & Hubs</span>
+            <div class="kpi-icon models"><i class="fas fa-map-marked-alt"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpis.regions_count }} <span style="font-size: 1rem; font-weight: 500;">Taluks</span></div>
+        <div class="kpi-footer">
+            <span>5 Urban Metros • 6 Rural Farming Clusters</span>
+        </div>
+    </div>
+</div>
+
+<!-- COMPARATIVE VISUALIZATIONS -->
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title"><i class="fas fa-chart-bar" style="color: var(--color-water);"></i> Seasonal Water Consumption (LPCD)</h3>
+                <p class="card-subtitle">Comparing Urban lifestyle consumption against Rural domestic & agricultural needs</p>
+            </div>
+        </div>
+        <div class="chart-box">
+            <canvas id="seasonalComparisonBar"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title"><i class="fas fa-spider" style="color: var(--color-knn);"></i> Multi-Dimensional Disparity Radar</h3>
+                <p class="card-subtitle">Structural differences between Urban and Rural infrastructure archetypes</p>
+            </div>
+        </div>
+        <div class="chart-box">
+            <canvas id="disparityRadarChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- REGIONAL TALUK BREAKDOWN TABLE -->
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title"><i class="fas fa-th-list" style="color: #38bdf8;"></i> Regional Profile & Demand Allocation (Chitradurga & Karnataka Context)</h3>
+            <p class="card-subtitle">Empirical aggregate demand and stress probability across all 11 monitored zones</p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Region Name</th>
+                    <th>Context</th>
+                    <th>Mean Population</th>
+                    <th>Water Demand (MLD)</th>
+                    <th>Water LPCD</th>
+                    <th>Energy Demand (MWh)</th>
+                    <th>Energy kWh/Cap</th>
+                    <th>Scarcity Stress %</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in regions %}
+                <tr>
+                    <td><strong>{{ r.name }}</strong></td>
+                    <td>
+                        {% if r.type == 'Urban' %}
+                        <span class="badge badge-urban">Urban</span>
+                        {% else %}
+                        <span class="badge badge-rural">Rural</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ "{:,}".format(r.population) }}</td>
+                    <td><strong style="color: var(--color-water);">{{ r.water_mld }}</strong></td>
+                    <td>{{ r.water_lpcd }} LPCD</td>
+                    <td><strong style="color: var(--color-energy);">{{ r.energy_mwh }}</strong></td>
+                    <td>{{ r.energy_kwh }} kWh</td>
+                    <td>
+                        {% if r.risk_pct > 50 %}
+                        <span class="badge badge-danger">{{ r.risk_pct }}%</span>
+                        {% elif r.risk_pct > 30 %}
+                        <span class="badge badge-warning">{{ r.risk_pct }}%</span>
+                        {% else %}
+                        <span class="badge badge-success">{{ r.risk_pct }}%</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const compData = {{ comp|tojson }};
+        renderComparativeCharts(compData);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}Live Prediction Studio | Population-Driven Demand Forecasting{% endblock %}
+{% block page_heading %}Interactive Live Forecasting Studio{% endblock %}
+
+{% block content %}
+<!-- REGIONAL PRESET SHORTCUTS -->
+<div class="card" style="margin-bottom: 24px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div>
+            <span style="font-size: 0.85rem; font-weight: 600; color: #fff;"><i class="fas fa-magic" style="color: #f59e0b;"></i> Quick Regional Presets:</span>
+            <span style="font-size: 0.78rem; color: var(--text-muted); margin-left: 8px;">Load verified demographic & climate archetypes:</span>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-outline" style="font-size: 0.75rem; padding: 5px 10px;" onclick="applyPreset('chitradurga_urban')">
+                <i class="fas fa-city" style="color: var(--color-water);"></i> Chitradurga Urban Core
+            </button>
+            <button type="button" class="btn btn-outline" style="font-size: 0.75rem; padding: 5px 10px;" onclick="applyPreset('challakere_rural')">
+                <i class="fas fa-seedling" style="color: var(--color-success);"></i> Challakere Rural Agrarian
+            </button>
+            <button type="button" class="btn btn-outline" style="font-size: 0.75rem; padding: 5px 10px;" onclick="applyPreset('hiriyur_monsoon')">
+                <i class="fas fa-cloud-rain" style="color: #38bdf8;"></i> Hiriyur Agro-Monsoon
+            </button>
+            <button type="button" class="btn btn-outline" style="font-size: 0.75rem; padding: 5px 10px;" onclick="applyPreset('bengaluru_metro')">
+                <i class="fas fa-industry" style="color: #a855f7;"></i> Bengaluru Peri-Urban
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- INPUT FORM -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title"><i class="fas fa-sliders-h" style="color: var(--color-water);"></i> Localized Forecasting Parameters</h3>
+                <p class="card-subtitle">Feed demographic, climate, and infrastructure variables into the ML pipeline</p>
+            </div>
+        </div>
+
+        <form action="{{ url_for('predict_page') }}" method="POST" id="predictionForm">
+            <div class="grid-2" style="gap: 14px;">
+                <div class="form-group">
+                    <label class="form-label" for="Region_Name">Region Name</label>
+                    <input type="text" class="form-control" id="Region_Name" name="Region_Name" value="{{ form_data.Region_Name }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="Region_Type">Context Sector</label>
+                    <select class="form-control" id="Region_Type" name="Region_Type">
+                        <option value="Urban" {% if form_data.Region_Type == 'Urban' %}selected{% endif %}>Urban (Industrial / Dense)</option>
+                        <option value="Rural" {% if form_data.Region_Type == 'Rural' %}selected{% endif %}>Rural (Agrarian / Dispersed)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-2" style="gap: 14px;">
+                <div class="form-group">
+                    <label class="form-label" for="Population">Total Population</label>
+                    <input type="number" class="form-control" id="Population" name="Population" value="{{ form_data.Population }}" min="1000" max="10000000" step="500" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="Population_Density">Population Density (per km²)</label>
+                    <input type="number" class="form-control" id="Population_Density" name="Population_Density" value="{{ form_data.Population_Density }}" min="50" max="25000" required>
+                </div>
+            </div>
+
+            <div class="grid-2" style="gap: 14px;">
+                <div class="form-group">
+                    <label class="form-label" for="Avg_Temperature_C">Avg Temperature (°C)</label>
+                    <input type="number" class="form-control" id="Avg_Temperature_C" name="Avg_Temperature_C" value="{{ form_data.Avg_Temperature_C }}" min="10" max="52" step="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="Rainfall_mm">Monthly Rainfall (mm)</label>
+                    <input type="number" class="form-control" id="Rainfall_mm" name="Rainfall_mm" value="{{ form_data.Rainfall_mm }}" min="0" max="600" step="0.5" required>
+                </div>
+            </div>
+
+            <div class="grid-2" style="gap: 14px;">
+                <div class="form-group">
+                    <label class="form-label" for="Industrial_Index">Industrial Activity Index (0-100)</label>
+                    <input type="number" class="form-control" id="Industrial_Index" name="Industrial_Index" value="{{ form_data.Industrial_Index }}" min="0" max="100" step="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="Agricultural_Index">Agricultural Activity Index (0-100)</label>
+                    <input type="number" class="form-control" id="Agricultural_Index" name="Agricultural_Index" value="{{ form_data.Agricultural_Index }}" min="0" max="100" step="1" required>
+                </div>
+            </div>
+
+            <div class="grid-3" style="gap: 12px;">
+                <div class="form-group">
+                    <label class="form-label" for="Household_Size">Household Size</label>
+                    <input type="number" class="form-control" id="Household_Size" name="Household_Size" value="{{ form_data.Household_Size }}" min="1.0" max="12.0" step="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="Water_Piped_Coverage_Pct">Piped Water %</label>
+                    <input type="number" class="form-control" id="Water_Piped_Coverage_Pct" name="Water_Piped_Coverage_Pct" value="{{ form_data.Water_Piped_Coverage_Pct }}" min="10" max="100" step="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="Season">Season</label>
+                    <select class="form-control" id="Season" name="Season">
+                        <option value="Summer" {% if form_data.Season == 'Summer' %}selected{% endif %}>Summer</option>
+                        <option value="Monsoon" {% if form_data.Season == 'Monsoon' %}selected{% endif %}>Monsoon</option>
+                        <option value="Winter" {% if form_data.Season == 'Winter' %}selected{% endif %}>Winter</option>
+                    </select>
+                </div>
+            </div>
+
+            <input type="hidden" id="Electrification_Pct" name="Electrification_Pct" value="{{ form_data.Electrification_Pct }}">
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; padding: 12px; font-size: 0.95rem;">
+                <i class="fas fa-play"></i> Execute Tri-Model Demand Forecasting
+            </button>
+        </form>
+    </div>
+
+    <!-- PREDICTION RESULTS PANEL -->
+    <div>
+        {% if result %}
+        <div class="card" style="border: 1px solid var(--border-bright);">
+            <div class="card-header">
+                <div>
+                    <h3 class="card-title"><i class="fas fa-chart-line" style="color: var(--color-success);"></i> Forecast Outcomes</h3>
+                    <p class="card-subtitle">{{ result.Input_Summary.Region_Name }} ({{ result.Input_Summary.Region_Type }} • {{ result.Input_Summary.Season }})</p>
+                </div>
+                {% if result.Consensus_Forecast.Scarcity_Risk_Level == 'High Scarcity Risk' %}
+                <span class="badge badge-danger"><i class="fas fa-exclamation-circle"></i> High Scarcity Risk</span>
+                {% else %}
+                <span class="badge badge-success"><i class="fas fa-check-circle"></i> Normal Allocation</span>
+                {% endif %}
+            </div>
+
+            <!-- CONSENSUS HIGHLIGHTS -->
+            <div class="grid-2" style="gap: 16px; margin-bottom: 20px;">
+                <div style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: var(--radius-sm); padding: 16px;">
+                    <div style="font-size: 0.78rem; color: var(--color-water); font-weight: 700; text-transform: uppercase;">Consensus Water Demand</div>
+                    <div style="font-size: 1.9rem; font-weight: 800; color: #fff; margin: 4px 0;">
+                        {{ result.Consensus_Forecast.Water_Demand_MLD }} <span style="font-size: 0.9rem; font-weight: 500;">MLD</span>
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">
+                        Effective: <strong>{{ result.Consensus_Forecast.Water_LPCD }} LPCD</strong> (Litres/Capita/Day)
+                    </div>
+                </div>
+
+                <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-sm); padding: 16px;">
+                    <div style="font-size: 0.78rem; color: var(--color-energy); font-weight: 700; text-transform: uppercase;">Consensus Energy Demand</div>
+                    <div style="font-size: 1.9rem; font-weight: 800; color: #fff; margin: 4px 0;">
+                        {{ result.Consensus_Forecast.Energy_Demand_MWh }} <span style="font-size: 0.9rem; font-weight: 500;">MWh/Day</span>
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">
+                        Effective: <strong>{{ result.Consensus_Forecast.Energy_kWh_Capita }} kWh/Capita</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3 MODELS COMPARATIVE BREAKDOWN TABLE -->
+            <h4 style="font-size: 0.88rem; color: #fff; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                <i class="fas fa-layer-group" style="color: #818cf8;"></i> Comparative Model Predictions:
+            </h4>
+            <div class="table-responsive" style="margin-bottom: 20px;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Water (MLD)</th>
+                            <th>Energy (MWh)</th>
+                            <th>Scarcity Risk Prob</th>
+                            <th>Risk Assessment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong style="color: var(--color-svm);">Support Vector Machine (SVM)</strong></td>
+                            <td>{{ result.Model_Breakdown.SVM.Water_Demand_MLD }} MLD</td>
+                            <td>{{ result.Model_Breakdown.SVM.Energy_Demand_MWh }} MWh</td>
+                            <td>{{ (result.Model_Breakdown.SVM.Scarcity_Probability * 100)|round(1) }}%</td>
+                            <td>
+                                {% if result.Model_Breakdown.SVM.Classification == 'High Risk' %}
+                                <span class="badge badge-danger">High Risk</span>
+                                {% else %}
+                                <span class="badge badge-success">Normal</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong style="color: var(--color-knn);">K-Nearest Neighbors (KNN)</strong></td>
+                            <td>{{ result.Model_Breakdown.KNN.Water_Demand_MLD }} MLD</td>
+                            <td>{{ result.Model_Breakdown.KNN.Energy_Demand_MWh }} MWh</td>
+                            <td>{{ (result.Model_Breakdown.KNN.Scarcity_Probability * 100)|round(1) }}%</td>
+                            <td>
+                                {% if result.Model_Breakdown.KNN.Classification == 'High Risk' %}
+                                <span class="badge badge-danger">High Risk</span>
+                                {% else %}
+                                <span class="badge badge-success">Normal</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong style="color: var(--color-logreg);">Logistic Regression</strong></td>
+                            <td>{{ result.Model_Breakdown.Logistic_Regression.Linear_Water_Demand_MLD }} MLD <span style="font-size: 0.72rem; color: var(--text-dim);">(Linear)</span></td>
+                            <td>{{ result.Model_Breakdown.Logistic_Regression.Linear_Energy_Demand_MWh }} MWh <span style="font-size: 0.72rem; color: var(--text-dim);">(Linear)</span></td>
+                            <td><strong>{{ (result.Model_Breakdown.Logistic_Regression.Scarcity_Probability * 100)|round(1) }}%</strong></td>
+                            <td>
+                                {% if result.Model_Breakdown.Logistic_Regression.Classification == 'High Risk' %}
+                                <span class="badge badge-danger">High Risk</span>
+                                {% else %}
+                                <span class="badge badge-success">Normal</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ACTIONABLE INSIGHTS -->
+            <div style="background: rgba(15, 23, 42, 0.6); padding: 16px; border-radius: var(--radius-sm); border-left: 3px solid #38bdf8;">
+                <h4 style="font-size: 0.85rem; color: #fff; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-lightbulb" style="color: #f59e0b;"></i> Actionable Policy & Utility Recommendations:
+                </h4>
+                {% for insight in result.Actionable_Insights %}
+                <p style="font-size: 0.82rem; color: #cbd5e1; margin-bottom: 4px;">• {{ insight }}</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <!-- INITIAL EMPTY STATE -->
+        <div class="card" style="text-align: center; padding: 48px 24px;">
+            <div style="width: 64px; height: 64px; background: rgba(56, 189, 248, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.8rem; color: #38bdf8;">
+                <i class="fas fa-microchip"></i>
+            </div>
+            <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 8px;">Run Model Inference</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; max-width: 400px; margin: 0 auto 20px;">
+                Select a preset or customize parameters on the left, then click <strong>Execute Tri-Model Demand Forecasting</strong> to compare SVM, KNN, and Logistic Regression outputs.
+            </p>
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <button type="button" class="btn btn-outline" onclick="applyPreset('chitradurga_urban')">
+                    <i class="fas fa-play"></i> Run Chitradurga Urban Preset
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

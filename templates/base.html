@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Population-Driven Demand Forecasting{% endblock %} | SJMIT CS&E</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="brand-badge"><i class="fas fa-microchip"></i> ML Framework</span>
+                <h1 class="brand-title">Resource Demand</h1>
+                <p class="brand-sub">Population-Driven Forecasting</p>
+                <p style="font-size: 0.68rem; color: #64748b; margin-top: 3px;">SJMIT, Chitradurga • 2026-27</p>
+            </div>
+
+            <ul class="nav-links">
+                {% if current_user %}
+                <li class="nav-item">
+                    <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
+                        <i class="fas fa-home"></i>
+                        <span>Home & Overview</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('predict_page') }}" class="nav-link {% if request.endpoint == 'predict_page' %}active{% endif %}">
+                        <i class="fas fa-calculator"></i>
+                        <span>Live Predict Studio</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('comparative') }}" class="nav-link {% if request.endpoint == 'comparative' %}active{% endif %}">
+                        <i class="fas fa-balance-scale"></i>
+                        <span>Urban vs Rural</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('map_view') }}" class="nav-link {% if request.endpoint == 'map_view' %}active{% endif %}">
+                        <i class="fas fa-cube"></i>
+                        <span>3D GIS Map Twin</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('models_view') }}" class="nav-link {% if request.endpoint == 'models_view' %}active{% endif %}">
+                        <i class="fas fa-brain"></i>
+                        <span>3 ML Models Eval</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('simulation') }}" class="nav-link {% if request.endpoint == 'simulation' %}active{% endif %}">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>Scenario Simulation</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('dataset_view') }}" class="nav-link {% if request.endpoint == 'dataset_view' %}active{% endif %}">
+                        <i class="fas fa-database"></i>
+                        <span>Dataset & Upload</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('report_view') }}" class="nav-link {% if request.endpoint == 'report_view' %}active{% endif %}">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Project Report</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a href="{{ url_for('login_page') }}" class="nav-link {% if request.endpoint == 'login_page' %}active{% endif %}">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>Officer / Scholar Login</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('register_page') }}" class="nav-link {% if request.endpoint == 'register_page' %}active{% endif %}">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Create Account</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('forgot_password_page') }}" class="nav-link {% if request.endpoint == 'forgot_password_page' %}active{% endif %}">
+                        <i class="fas fa-key"></i>
+                        <span>Reset Password</span>
+                    </a>
+                </li>
+                <li style="padding: 16px 14px; margin-top: 24px; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); border: 1px dashed var(--border-bright); font-size: 0.76rem; color: var(--text-muted); line-height: 1.6;">
+                    <strong style="color: #38bdf8; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                        <i class="fas fa-lock"></i> Access Control Active
+                    </strong>
+                    Complies with <strong>Section 5.9 Security Protocols</strong>. Please log in or use <strong>1-Click Demo Login</strong> to access the forecasting suite.
+                </li>
+                {% endif %}
+            </ul>
+
+            <div class="sidebar-footer">
+                {% if current_user %}
+                <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 28px; height: 28px; background: rgba(56, 189, 248, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 0.8rem;">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div style="overflow: hidden;">
+                        <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main); white-space: nowrap; text-overflow: ellipsis;">{{ current_user.name }}</div>
+                        <div style="font-size: 0.68rem; color: var(--text-muted);">{{ current_user.role }}</div>
+                    </div>
+                </div>
+                <a href="{{ url_for('logout') }}" style="font-size: 0.72rem; color: #f43f5e; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+                    <i class="fas fa-sign-out-alt"></i> Sign Out
+                </a>
+                {% else %}
+                <a href="{{ url_for('login_page') }}" class="btn btn-outline" style="width: 100%; font-size: 0.75rem; padding: 6px 10px;">
+                    <i class="fas fa-sign-in-alt"></i> Portal Login
+                </a>
+                {% endif %}
+                <div style="margin-top: 10px; font-size: 0.68rem; color: var(--text-dim);">
+                    Dept. of CS&E • SJMIT Chitradurga
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-wrapper">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h2 class="page-title">{% block page_heading %}Dashboard Overview{% endblock %}</h2>
+                    <div class="model-status-pills">
+                        <span class="status-pill"><span class="dot dot-cyan"></span> SVM: Active</span>
+                        <span class="status-pill"><span class="dot dot-pink"></span> KNN: Active</span>
+                        <span class="status-pill"><span class="dot dot-green"></span> LogReg: Active</span>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    {% if current_user %}
+                    <a href="{{ url_for('predict_page') }}" class="btn btn-primary">
+                        <i class="fas fa-bolt"></i> Instant Forecast
+                    </a>
+                    <span class="status-pill" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #10b981;">
+                        <i class="fas fa-id-badge"></i> {{ current_user.role }}
+                    </span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline" style="font-size: 0.78rem;">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                    {% else %}
+                    <span class="status-pill" style="background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.4); color: #f59e0b;">
+                        <i class="fas fa-lock"></i> Authentication Required
+                    </span>
+                    <a href="{{ url_for('login_page') }}" class="btn btn-primary">
+                        <i class="fas fa-user-lock"></i> Sign In
+                    </a>
+                    {% endif %}
+                </div>
+            </header>
+
+            <main class="content-body">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

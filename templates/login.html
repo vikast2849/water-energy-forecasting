@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}User Login | Population-Driven Demand Forecasting{% endblock %}
+{% block page_heading %}User Authentication & Access Control{% endblock %}
+
+{% block content %}
+<div style="max-width: 520px; margin: 30px auto;">
+    <div class="card" style="border: 1px solid var(--border-bright); padding: 36px 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.5);">
+        
+        <!-- HEADER -->
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="width: 56px; height: 56px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 1.4rem; color: var(--color-water);">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <h3 style="color: var(--text-main); font-size: 1.35rem; font-weight: 700;">Utility & Researcher Login</h3>
+            <p style="color: var(--text-muted); font-size: 0.82rem; margin-top: 4px;">
+                Secured Access Control (Section 5.9 Security Protocol)
+            </p>
+        </div>
+
+        {% if error %}
+        <div class="alert-box alert-danger">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        {% if message %}
+        <div class="alert-box alert-success">
+            <i class="fas fa-check-circle"></i>
+            <span>{{ message }}</span>
+        </div>
+        {% endif %}
+
+        <!-- FORM -->
+        <form action="{{ url_for('login_page') }}" method="POST" style="margin-bottom: 22px;">
+            <div class="form-group">
+                <label class="form-label" for="username"><i class="fas fa-envelope"></i> Email or Officer ID</label>
+                <input type="text" class="form-control" id="username" name="username" placeholder="e.g. officer@kuwsdb.gov.in" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password"><i class="fas fa-lock"></i> Password</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; margin-bottom: 18px; color: var(--text-muted);">
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" name="remember" checked style="accent-color: var(--color-water);"> Keep me logged in
+                </label>
+                <a href="{{ url_for('forgot_password_page') }}" style="color: #38bdf8; text-decoration: none;">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 0.95rem;">
+                <i class="fas fa-sign-in-alt"></i> Authenticate & Enter Portal
+            </button>
+        </form>
+
+        <!-- 1-CLICK QUICK DEMO LOGINS FOR EXAMINERS -->
+        <div style="border-top: 1px solid var(--border-color); padding-top: 20px; text-align: center;">
+            <p style="font-size: 0.78rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 12px;">
+                ⚡ 1-Click Examiner & Demo Access
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button type="button" class="btn btn-outline" style="font-size: 0.82rem; justify-content: flex-start; padding: 10px 14px;" onclick="quickLogin('officer@sjmit.ac.in', 'Officer-Dr-Kumar', 'Municipal Utility Officer')">
+                    <i class="fas fa-building" style="color: var(--color-water);"></i>
+                    <span><strong>Login as Municipal Utility Officer</strong> (KUWSDB / BESCOM)</span>
+                </button>
+                <button type="button" class="btn btn-outline" style="font-size: 0.82rem; justify-content: flex-start; padding: 10px 14px;" onclick="quickLogin('researcher@sjmit.ac.in', 'Student-Researcher', 'CS&E Project Scholar')">
+                    <i class="fas fa-user-graduate" style="color: var(--color-knn);"></i>
+                    <span><strong>Login as Project Scholar</strong> (SJMIT CS&E Team)</span>
+                </button>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px; text-align: center; font-size: 0.82rem; color: var(--text-muted);">
+            Don't have an access account? <a href="{{ url_for('register_page') }}" style="color: #38bdf8; text-decoration: none; font-weight: 600;">Register Here</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function quickLogin(email, name, role) {
+        document.getElementById('username').value = email;
+        document.getElementById('password').value = 'password123';
+        // Auto submit
+        document.querySelector('form').submit();
+    }
+</script>
+{% endblock %}

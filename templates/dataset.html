@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Dataset & CSV Management | Population-Driven Demand Forecasting{% endblock %}
+{% block page_heading %}Dataset Explorer & Data Management{% endblock %}
+
+{% block content %}
+<!-- SUMMARY & ACTIONS -->
+<div class="card" style="margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <h3 class="card-title" style="margin-bottom: 4px;"><i class="fas fa-database" style="color: #38bdf8;"></i> Empirical Benchmark Dataset</h3>
+            <p class="card-subtitle">Showing {{ total_items }} multi-year records across 11 Karnataka urban & rural taluk archetypes</p>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="{{ url_for('download_dataset') }}" class="btn btn-outline">
+                <i class="fas fa-download"></i> Download CSV Dataset
+            </a>
+            <button class="btn btn-primary" onclick="document.getElementById('uploadModal').scrollIntoView({behavior: 'smooth'})">
+                <i class="fas fa-upload"></i> Upload Custom Dataset
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- FILTER CONTROLS -->
+<div class="card" style="padding: 16px 24px; margin-bottom: 20px;">
+    <form method="GET" action="{{ url_for('dataset_view') }}" style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px;">
+            <label class="form-label" style="margin-bottom: 4px;">Search Region Name</label>
+            <input type="text" name="region" class="form-control" placeholder="e.g. Chitradurga, Challakere..." value="{{ region_filter }}">
+        </div>
+        <div style="width: 180px;">
+            <label class="form-label" style="margin-bottom: 4px;">Filter Context</label>
+            <select name="type" class="form-control">
+                <option value="">All Contexts</option>
+                <option value="Urban" {% if type_filter == 'Urban' %}selected{% endif %}>Urban Only</option>
+                <option value="Rural" {% if type_filter == 'Rural' %}selected{% endif %}>Rural Only</option>
+            </select>
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Apply Filter</button>
+            <a href="{{ url_for('dataset_view') }}" class="btn btn-outline" style="margin-left: 6px;">Reset</a>
+        </div>
+    </form>
+</div>
+
+<!-- DATA TABLE -->
+<div class="card">
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Region Name</th>
+                    <th>Type</th>
+                    <th>Year</th>
+                    <th>Season</th>
+                    <th>Population</th>
+                    <th>Density</th>
+                    <th>Temp (°C)</th>
+                    <th>Rain (mm)</th>
+                    <th>Ind Idx</th>
+                    <th>Agr Idx</th>
+                    <th>Water (MLD)</th>
+                    <th>Energy (MWh)</th>
+                    <th>Scarcity Risk</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in records %}
+                <tr>
+                    <td><strong>{{ row.Region_Name }}</strong></td>
+                    <td>
+                        {% if row.Region_Type == 'Urban' %}
+                        <span class="badge badge-urban">Urban</span>
+                        {% else %}
+                        <span class="badge badge-rural">Rural</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ row.Year }}-{{ "%02d"|format(row.Month) }}</td>
+                    <td>{{ row.Season }}</td>
+                    <td>{{ "{:,}".format(row.Population) }}</td>
+                    <td>{{ row.Population_Density }}</td>
+                    <td>{{ row.Avg_Temperature_C }}°C</td>
+                    <td>{{ row.Rainfall_mm }}</td>
+                    <td>{{ row.Industrial_Index }}</td>
+                    <td>{{ row.Agricultural_Index }}</td>
+                    <td><strong style="color: var(--color-water);">{{ row.Water_Demand_MLD }}</strong></td>
+                    <td><strong style="color: var(--color-energy);">{{ row.Energy_Demand_MWh }}</strong></td>
+                    <td>
+                        {% if row.Scarcity_Risk == 1 %}
+                        <span class="badge badge-danger">High Risk</span>
+                        {% else %}
+                        <span class="badge badge-success">Normal</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- PAGINATION -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--border-color);">
+        <div style="font-size: 0.82rem; color: var(--text-muted);">
+            Page <strong>{{ page }}</strong> of <strong>{{ total_pages }}</strong> (Total {{ total_items }} entries)
+        </div>
+        <div style="display: flex; gap: 8px;">
+            {% if page > 1 %}
+            <a href="{{ url_for('dataset_view', page=page-1, region=region_filter, type=type_filter) }}" class="btn btn-outline" style="font-size: 0.78rem;">&larr; Previous</a>
+            {% endif %}
+            {% if page < total_pages %}
+            <a href="{{ url_for('dataset_view', page=page+1, region=region_filter, type=type_filter) }}" class="btn btn-outline" style="font-size: 0.78rem;">Next &rarr;</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- CSV UPLOAD & RETRAIN SECTION -->
+<div class="card" id="uploadModal" style="border: 1px dashed var(--border-bright);">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-cloud-upload-alt" style="color: #38bdf8;"></i> Upload Custom CSV Dataset & Retrain</h3>
+        <span class="badge badge-warning">Automated Retraining</span>
+    </div>
+    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px;">
+        Upload a fresh municipal water/energy CSV dataset. The system will automatically validate the columns, execute feature engineering, and retrain all 3 models (SVM, KNN, Logistic Regression).
+    </p>
+
+    <form id="uploadDatasetForm" style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+        <input type="file" id="datasetFileInput" accept=".csv" class="form-control" style="flex: 1; min-width: 250px;">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-sync-alt"></i> Upload & Retrain All Models
+        </button>
+    </form>
+</div>
+{% endblock %}
