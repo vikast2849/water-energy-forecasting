@@ -1,6 +1,6 @@
 # Population-Driven Forecasting: A Machine Learning Framework for Urban & Rural Water & Energy Demand
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-vikasst.shop-0284c7?style=for-the-badge&logo=googlechrome&logoColor=white)](https://vikasst.shop)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-water.vikasst.shop-0284c7?style=for-the-badge&logo=googlechrome&logoColor=white)](https://water.vikasst.shop)
 [![Python Version](https://img.shields.io/badge/Python-3.13%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Framework-Flask%203.1-emerald?style=for-the-badge&logo=flask&logoColor=white)](https://palletsprojects.com/p/flask/)
 [![Scikit-Learn](https://img.shields.io/badge/ML-scikit--learn%201.8-orange?style=for-the-badge&logo=scikitlearn&logoColor=white)](https://scikit-learn.org/)
@@ -10,7 +10,7 @@
 **S.J.M. Institute of Technology (SJMIT), Chitradurga**  
 *Academic Year 2026 - 2027*
 
-🌐 **Production Link:** [https://vikasst.shop](https://vikasst.shop)
+🌐 **Production Link:** [https://water.vikasst.shop](https://water.vikasst.shop)
 
 ---
 
@@ -32,7 +32,7 @@ Models are trained on empirical demographic, climatic, and infrastructure metric
 - **Production WSGI Server:** Gunicorn 23.0
 - **Frontend:** Responsive HTML5, Glassmorphism CSS3, Chart.js 4.4, Leaflet.js, Three.js, Font Awesome 6
 - **Hosting & Infrastructure:** Render Web Service (Linux)
-- **Domain & SSL:** Custom Domain `vikasst.shop` with automated TLS/HTTPS encryption
+- **Domain & SSL:** Custom Domain `water.vikasst.shop` (https://water.vikasst.shop) with automated TLS/HTTPS encryption
 
 ---
 
@@ -180,4 +180,4 @@ water-energy-forecasting/
 3. Add environment variables:
    - `PYTHON_VERSION`: `3.13.0`
    - `SECRET_KEY`: *(Generate a random 32-byte string)*
-4. Map custom domain `vikasst.shop` and configure DNS records as specified in the project deployment guide.
+4. Map custom domain `water.vikasst.shop` (https://water.vikasst.shop) and configure DNS records as specified in the project deployment guide.
