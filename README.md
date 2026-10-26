@@ -1,108 +1,123 @@
 # Population-Driven Forecasting: A Machine Learning Framework for Urban & Rural Water & Energy Demand
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-vikasst.shop-0284c7?style=for-the-badge&logo=googlechrome&logoColor=white)](https://vikasst.shop)
+[![Python Version](https://img.shields.io/badge/Python-3.13%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Framework-Flask%203.1-emerald?style=for-the-badge&logo=flask&logoColor=white)](https://palletsprojects.com/p/flask/)
+[![Scikit-Learn](https://img.shields.io/badge/ML-scikit--learn%201.8-orange?style=for-the-badge&logo=scikitlearn&logoColor=white)](https://scikit-learn.org/)
+[![Deployment](https://img.shields.io/badge/Deployed%20on-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://render.com)
+
 **Department of Computer Science & Engineering**  
 **S.J.M. Institute of Technology (SJMIT), Chitradurga**  
 *Academic Year 2026 - 2027*
 
+🌐 **Production Link:** [https://vikasst.shop](https://vikasst.shop)
+
 ---
 
 ## 📌 Project Overview
-Rapid urbanization and population dynamics create severe strains on municipal resources. Existing systems treat urban and rural areas uniformly, resulting in water wastage in cities and severe shortages and power cuts in agrarian regions.
+Rapid urbanization and population dynamics create severe strains on municipal utility systems. Traditional municipal resource planning frequently treats urban and rural sectors homogeneously, yielding treated water shortages and power load-shedding in agrarian zones alongside over-consumption in metropolitan centers.
 
-This project delivers a **population-driven forecasting website and machine learning framework** that models both **Water Demand (MLD)** and **Energy Demand (MWh)** across urban and rural sectors.
+This project delivers a **production-grade machine learning framework and cloud web application** to forecast:
+- **Water Demand (Million Litres per Day - MLD)**
+- **Energy Demand (Megawatt-Hours per Day - MWh)**
+- **Resource Scarcity Risk Classification (Normal vs. High Scarcity Risk)**
+
+Models are trained on empirical demographic, climatic, and infrastructure metrics across 11 Karnataka district regions.
 
 ---
 
-## 🧠 Machine Learning Algorithms Implemented
+## ⚡ Tech Stack
+- **Backend Framework:** Python 3.13, Flask 3.1
+- **Machine Learning & Analytics:** scikit-learn 1.8, NumPy 2.5, Pandas 2.3, Joblib 1.6
+- **Production WSGI Server:** Gunicorn 23.0
+- **Frontend:** Responsive HTML5, Glassmorphism CSS3, Chart.js 4.4, Leaflet.js, Three.js, Font Awesome 6
+- **Hosting & Infrastructure:** Render Web Service (Linux)
+- **Domain & SSL:** Custom Domain `vikasst.shop` with automated TLS/HTTPS encryption
 
-In accordance with the project specification (Chapters 1–5), the system implements three core algorithms:
+---
 
-1. **Support Vector Machine (SVM / SVR):**
-   - Non-linear Radial Basis Function (RBF) kernel mapping high-dimensional demographic and climate variables.
-   - Ideal for continuous urban water and electricity demand forecasting.
-   - **Performance:** Water $R^2 = 99.86\%$, Energy $R^2 = 93.06\%$, 5-Fold CV $R^2 = 99.79\%$.
-
+## 🧠 Machine Learning Algorithms
+1. **Support Vector Machine (SVM / SVR / SVC):**
+   - Non-linear Radial Basis Function (RBF) kernel mapping complex interactions between demographic density and seasonal thermal stress.
+   - **Performance:** Water $R^2 = 99.86\%$, Energy $R^2 = 93.06\%$, 5-Fold Cross-Validation $R^2 = 99.79\%$.
 2. **K-Nearest Neighbors (KNN Regressor & Classifier):**
-   - Distance-weighted neighbor aggregation ($k=5$).
-   - Captures localized community consumption behaviors in rural taluks and agricultural clusters.
-   - **Performance:** Water $R^2 = 98.84\%$, Energy $R^2 = 98.85\%$, 5-Fold CV $R^2 = 98.89\%$.
-
-3. **Logistic Regression:**
-   - Calibrated sigmoid probability classifier ($P(\text{Scarcity}) = \frac{1}{1 + e^{-z}}$).
-   - Classifies resource scarcity risk (Normal vs. High Scarcity Risk) with transparent odds ratios and feature importance coefficients.
+   - Distance-weighted neighbor aggregation ($k=5$) capturing localized cluster consumption behaviors.
+   - **Performance:** Water $R^2 = 98.84\%$, Energy $R^2 = 98.85\%$, 5-Fold Cross-Validation $R^2 = 98.89\%$.
+3. **Logistic Regression & Linear Baseline:**
+   - Interpretable log-odds classification for drought and scarcity risk alerting with feature importance ranking.
    - **Performance:** Accuracy $= 91.35\%$, Precision $= 0.974$, Recall $= 0.925$, F1 $= 0.949$.
-
-> **All models comfortably exceed the non-functional requirement of $>85\%$ accuracy.**
 
 ---
 
 ## 🌐 Web Application Features
-
-1. **Executive Dashboard (`/`):**
-   - High-level KPIs (Average Water MLD, Energy MWh, Disparity Ratio, Scarcity alerts).
-   - Multi-year trajectory graphs (2019–2035) with historical trends and ML forecasts.
-   - Tri-model architecture snapshot.
-
-2. **Interactive Live Prediction Studio (`/predict`):**
-   - Dynamic form for localized demographic, climate, and infrastructure inputs.
-   - 1-Click regional presets: *Chitradurga Urban Core*, *Challakere Rural Agrarian*, *Hiriyur Agro-Cluster*, and *Bengaluru Peri-Urban*.
-   - Side-by-side comparative breakdown of **SVM**, **KNN**, and **Logistic Regression** forecasts.
-   - Automated actionable policy recommendations for municipal utility boards.
-
-3. **Urban vs. Rural Disparity Framework (`/comparative`):**
-   - Multi-dimensional disparity radar chart.
-   - Seasonal consumption breakdown (Summer vs Monsoon vs Winter LPCD).
-   - Comprehensive taluk comparison table covering 11 Karnataka regions.
-
-4. **3-Model Benchmarks & Explainability (`/models`):**
-   - Grouped $R^2$ variance, MAE, and RMSE comparison charts.
-   - Confusion matrices for all 3 classifiers.
-   - Logistic Regression feature weights & odds ratio table.
-   - Architectural comparison matrix.
-
-5. **"What-If" Climate & Demographic Simulator (`/simulation`):**
-   - Real-time reactive sliders for Population Growth %, Global Warming Temp Anomaly, and Rainfall Deficit.
-   - Instant live stress testing across all 3 models.
-
-6. **Dataset Management & CSV Upload (`/dataset`):**
-   - Interactive paginated table of 924+ empirical records.
-   - Filter by Region Name and Context (Urban/Rural).
-   - 1-Click CSV dataset upload with automated retraining of SVM, KNN, and Logistic Regression models.
-
-7. **Academic Project Report (`/report`):**
-   - Formal documentation formatted for the final year project viva and institutional submission.
-   - 1-Click "Print / Save as PDF" button.
+- **Executive Dashboard (`/dashboard`, `/home`):** Real-time KPIs, historical trends (2019–2025), and forward projections (2026–2035).
+- **Interactive Forecasting Studio (`/predict`):** Localized parameter inputs, 1-click regional presets, consensus averaging, and actionable municipal policy recommendations.
+- **Urban vs. Rural Disparity Framework (`/comparative`):** Comparative analytics, disparity ratios, and seasonal consumption radar breakdowns.
+- **Geospatial Resource Map (`/map`):** Interactive GIS mapping of regional demand clusters and infrastructure coverage.
+- **3-Model Benchmarks & Explainability (`/models`):** Grouped $R^2$, MAE, RMSE metrics, confusion matrices, and feature coefficients.
+- **Demographic & Climate Stress Simulator (`/simulation`):** What-if stress testing with dynamic sliders for temperature anomalies, rainfall variation, and population shifts.
+- **Dataset Management & Retraining (`/dataset`):** Paginated explorer of empirical records with CSV upload and automated retraining pipeline.
+- **Health Check Endpoint (`/health`):** Lightweight automated uptime monitoring endpoint.
 
 ---
 
-## 🚀 How to Run the Website
+## 📸 Screenshots
+*(Add application interface screenshots below)*
 
-### Prerequisites
-- Python 3.9+ (Installed: Python 3.14)
-- Packages: `Flask`, `scikit-learn`, `pandas`, `numpy`, `joblib`, `matplotlib`
+| Executive Dashboard | Forecasting Studio |
+| :---: | :---: |
+| ![Dashboard Screenshot](static/img/dashboard_preview.png) | ![Predict Screenshot](static/img/predict_preview.png) |
 
-### Step 1: Navigate to the Project Directory
-```powershell
-cd C:\Users\vinod\.gemini\antigravity\scratch\water-energy-forecasting
+---
+
+## 💻 Local Setup & Installation
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/vikast2849/water-energy-forecasting.git
+cd water-energy-forecasting
 ```
 
-### Step 2: Run the Application
+### 2. Create and Activate Virtual Environment
+**On Linux/macOS:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+**On Windows (PowerShell):**
 ```powershell
+python -m venv venv
+venv\Scripts\Activate.ps1
+```
+
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure Environment Variables
+Copy `.env.example` to `.env`:
+```bash
+cp .env.example .env
+```
+Edit `.env` to set your secret key or custom demo passwords.
+
+### 5. Run the Application
+**Development Server:**
+```bash
 python app.py
 ```
-
-### Step 3: Open in Browser
-Open your web browser and navigate to:
+**Production Server (Gunicorn):**
+```bash
+gunicorn app:app --workers 2 --timeout 120
 ```
-
-
-```
+Access the application at `http://127.0.0.1:5000`.
 
 ---
 
-## 🧪 Running Automated Tests
-To run the automated verification test suite:
-```powershell
+## 🧪 Automated Testing
+Run the complete unit and integration test suite:
+```bash
 python test_pipeline.py
 ```
 
@@ -111,48 +126,58 @@ python test_pipeline.py
 ## 📁 Project Structure
 ```
 water-energy-forecasting/
-│
-├── app.py                      # Flask application and REST API endpoints
-├── train.py                    # Model training and cross-validation pipeline
-├── test_pipeline.py            # Automated test suite (5/5 unit tests)
+├── app.py                      # Flask web application & REST API routes
+├── Procfile                    # Render/Heroku process declaration
+├── render.yaml                 # Render infrastructure-as-code specification
+├── requirements.txt            # Pinned production dependencies
+├── .python-version             # Python version pin (3.13.0)
+├── .env.example                # Example environment variables template
+├── .gitignore                  # Git ignore rules
+├── run.py                      # Production startup helper
+├── train.py                    # Standalone model training pipeline
+├── test_pipeline.py            # Automated test suite
 ├── README.md                   # Complete documentation
 │
 ├── data/
-│   ├── generate_dataset.py     # Script to generate realistic urban/rural dataset
-│   └── water_energy_demand.csv # 924 multi-year records across 11 regions
+│   ├── generate_dataset.py     # Synthetic data generator for Karnataka regions
+│   └── water_energy_demand.csv # 924 historical records
 │
 ├── ml/
-│   ├── preprocessor.py         # StandardScaler, feature extraction & imputation
-│   ├── models.py               # SVM (SVR/SVC), KNN, Logistic Regression engines
-│   └── analytics.py            # Disparity analysis, trendlines & simulation engine
+│   ├── preprocessor.py         # Feature engineering & StandardScaler
+│   ├── models.py               # SVR/SVC, KNN, Logistic Regression predictors
+│   └── analytics.py            # Statistical KPIs, trends, and disparity analysis
 │
 ├── saved_models/
-│   ├── svm_water.joblib        # Trained SVR model for water demand
-│   ├── svm_energy.joblib       # Trained SVR model for energy demand
-│   ├── svm_clf.joblib          # Trained SVC model for scarcity risk
-│   ├── knn_water.joblib        # Trained KNN Regressor for water demand
-│   ├── knn_energy.joblib       # Trained KNN Regressor for energy demand
-│   ├── knn_clf.joblib          # Trained KNN Classifier for scarcity risk
-│   ├── logistic_clf.joblib     # Trained Logistic Regression classifier
-│   ├── linear_water.joblib     # Linear baseline model for water
-│   ├── linear_energy.joblib    # Linear baseline model for energy
-│   ├── scaler.joblib           # Preprocessor StandardScaler
-│   └── metrics.json            # Model metrics, R2, MAE, RMSE, Confusion Matrices
+│   ├── *.joblib                # Serialized scikit-learn models & scaler
+│   └── metrics.json            # Model evaluation metrics cache
 │
 ├── static/
-│   ├── css/
-│   │   └── style.css           # Modern glassmorphism UI & responsive styles
-│   └── js/
-│       ├── main.js             # Form presets, sliders, and upload handler
-│       └── charts.js           # Chart.js visualization routines
+│   ├── css/style.css           # Glassmorphism dark mode stylesheet
+│   └── js/                     # Client-side visualization routines (Chart.js)
 │
 └── templates/
-    ├── base.html               # Base layout with sidebar & status pills
+    ├── base.html               # Master layout template
+    ├── login.html              # Authentication portal
     ├── dashboard.html          # Executive analytics dashboard
-    ├── predict.html            # Live forecasting studio
-    ├── comparative.html        # Urban vs Rural disparity framework
-    ├── models.html             # 3-model benchmark & explainability
-    ├── simulation.html         # Climate & growth stress test simulator
-    ├── dataset.html            # Dataset explorer & upload portal
-    └── report.html             # Academic project report (Print/PDF)
+    ├── predict.html            # Scenario forecasting studio
+    ├── comparative.html        # Urban vs Rural analytics
+    ├── map.html                # GIS resource mapping
+    ├── models.html             # Machine learning evaluation
+    ├── simulation.html         # Climate/demographic simulator
+    ├── dataset.html            # Paginated dataset viewer
+    └── report.html             # Institutional project report
 ```
+
+---
+
+## 🚀 Cloud Deployment (Render.com)
+
+1. Connect the GitHub repository `vikast2849/water-energy-forecasting` to [Render](https://dashboard.render.com).
+2. Configure Web Service:
+   - **Environment:** `Python`
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `gunicorn app:app --workers 2 --timeout 120`
+3. Add environment variables:
+   - `PYTHON_VERSION`: `3.13.0`
+   - `SECRET_KEY`: *(Generate a random 32-byte string)*
+4. Map custom domain `vikasst.shop` and configure DNS records as specified in the project deployment guide.
