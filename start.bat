@@ -14,15 +14,22 @@ start "" cmd /c "timeout /t 2 /nobreak >nul & start http://127.0.0.1:5000"
 echo   [2/2] Starting Flask Web Server...
 echo.
 
-where python >nul 2>nul
+where py >nul 2>nul
 if %errorlevel% equ 0 (
-    python run.py
+    py -3 run.py
 ) else (
-    if exist "C:\Python314\python.exe" (
-        "C:\Python314\python.exe" run.py
+    where python >nul 2>nul
+    if %errorlevel% equ 0 (
+        python run.py
     ) else (
-        echo [ERROR] Python was not found on your system.
-        pause
+        if exist "%LOCALAPPDATA%\Programs\Python\Python313\python.exe" (
+            "%LOCALAPPDATA%\Programs\Python\Python313\python.exe" run.py
+        ) else if exist "C:\Python314\python.exe" (
+            "C:\Python314\python.exe" run.py
+        ) else (
+            echo [ERROR] Python was not found on your system.
+            pause
+        )
     )
 )
 

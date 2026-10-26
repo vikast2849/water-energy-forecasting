@@ -5,6 +5,13 @@ import pandas as pd
 from functools import wraps
 from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file, session
 
+# Load environment variables from .env file if available
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 # Add base directory to path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
@@ -14,17 +21,21 @@ from ml.models import ModelTrainer, DemandPredictor
 from ml.analytics import DemandAnalytics
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "sjmit-cs-project-2026-secret-secure-key"
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "sjmit-cs-project-2026-secret-secure-key")
 app.config["UPLOAD_FOLDER"] = os.path.join(BASE_DIR, "data")
 
 DATA_PATH = os.path.join(BASE_DIR, "data", "water_energy_demand.csv")
 MODELS_DIR = os.path.join(BASE_DIR, "saved_models")
 
 # In-memory user database with pre-configured demo users
+DEMO_OFFICER_PW = os.environ.get("DEMO_OFFICER_PASSWORD", "password123")
+DEMO_RESEARCHER_PW = os.environ.get("DEMO_RESEARCHER_PASSWORD", "password123")
+DEMO_ADMIN_PW = os.environ.get("DEMO_ADMIN_PASSWORD", "admin")
+
 USERS_DB = {
-    "officer@sjmit.ac.in": {"name": "Dr. Rajesh Kumar", "password": "password123", "role": "Municipal Utility Officer"},
-    "researcher@sjmit.ac.in": {"name": "Final Year CS&E Scholar", "password": "password123", "role": "CS&E Project Scholar"},
-    "admin@sjmit.ac.in": {"name": "System Administrator", "password": "admin", "role": "System Admin"}
+    "officer@sjmit.ac.in": {"name": "Dr. Rajesh Kumar", "password": DEMO_OFFICER_PW, "role": "Municipal Utility Officer"},
+    "researcher@sjmit.ac.in": {"name": "Final Year CS&E Scholar", "password": DEMO_RESEARCHER_PW, "role": "CS&E Project Scholar"},
+    "admin@sjmit.ac.in": {"name": "System Administrator", "password": DEMO_ADMIN_PW, "role": "System Admin"}
 }
 
 # Access Control Decorator (Fulfills Section 5.9 Security Requirements)
@@ -391,5 +402,9 @@ def retrain_models():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route("/health")
+def health():
+    return jsonify({"status": "ok"}), 200
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

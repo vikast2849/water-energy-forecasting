@@ -16,6 +16,14 @@ class TestDemandForecastingSystem(unittest.TestCase):
         self.models_dir = os.path.join(BASE_DIR, "saved_models")
         self.predictor = DemandPredictor(self.models_dir)
 
+    def test_00_health_endpoint(self):
+        """Verify lightweight /health endpoint returns 200 OK and status ok."""
+        res = self.app.get("/health")
+        self.assertEqual(res.status_code, 200)
+        data = res.get_json()
+        self.assertEqual(data.get("status"), "ok")
+        print("\n[PASS] /health endpoint verified -> {'status': 'ok'}")
+
     def test_01_models_loaded_and_metrics_target(self):
         """Verify models are loaded and all metrics exceed the >85% requirement."""
         self.assertTrue(len(self.predictor.models) >= 8)
