@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: water-energy-forecasting
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 2 --timeout 120
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEMO_OFFICER_PASSWORD
+        value: password123
+      - key: DEMO_RESEARCHER_PASSWORD
+        value: password123
+      - key: DEMO_ADMIN_PASSWORD
+        value: admin
